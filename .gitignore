@@ -1,0 +1,31 @@
+# Maven
+/target/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# Runtime data
+*.dat
+*.log
+
+# IDEs
+.classpath
+.project
+.settings/
+.idea/
+*.iml
+.vscode/
+
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+application-local.properties
