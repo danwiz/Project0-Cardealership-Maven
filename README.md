@@ -1,5 +1,7 @@
 # Car Dealership Console Application
 
+[![Maven CI](https://github.com/danwiz/Project0-Cardealership-Maven/actions/workflows/maven.yml/badge.svg)](https://github.com/danwiz/Project0-Cardealership-Maven/actions/workflows/maven.yml)
+
 A legacy Java console application that models customer and employee workflows for a small car dealership. The project includes user registration and authentication, vehicle inventory, purchase offers, payment handling, and file-based persistence.
 
 ## Project status
@@ -20,11 +22,14 @@ The application is not yet considered production-ready or pin-ready.
 
 ## Technology
 
-- Java
+- Java 17
 - Maven
 - Object-oriented domain and service classes
 - Local file serialization
-- Log4j API
+- Log4j API 2.26.1
+- JUnit 4.13.2
+- GitHub Actions
+- Dependabot
 
 ## Repository layout
 
@@ -35,20 +40,32 @@ src/test/java/        Automated tests
 pom.xml               Maven project configuration
 ```
 
-## Build status
+## Build and test
 
-The repository is undergoing modernization. The existing Maven configuration targets an older Java generation and includes outdated dependencies. Build and runtime instructions will be finalized after the source audit and compatibility upgrade are complete.
+Requirements:
+
+- JDK 17
+- Maven 3.9 or later
+
+Run the full validation lifecycle:
+
+```bash
+mvn --batch-mode --no-transfer-progress verify
+```
+
+The GitHub Actions workflow runs Maven validation and verification on pushes and pull requests to `master`. The workflow can also be started manually from the Actions tab.
+
+## Dependency maintenance
+
+Dependabot checks Maven dependencies and GitHub Actions weekly. Automated update pull requests must still pass CI and receive human review before merge.
 
 ## Modernization roadmap
 
-- Upgrade the Maven compiler and dependency configuration
-- Select a supported Java LTS version
-- Remove IDE-generated and local-only files
-- Add a safe `.gitignore`
+- Confirm the first clean Java 17 Maven build
+- Remove remaining IDE-generated and local-only files
 - Refactor console, service, persistence, and domain concerns
 - Replace broad exception printing with structured error handling
 - Add unit tests for core domain and service behavior
-- Add GitHub Actions build and test validation
 - Add sample terminal sessions and architecture documentation
 - Review authentication and data handling for security risks
 
