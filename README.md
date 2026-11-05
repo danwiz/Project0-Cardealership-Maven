@@ -1,93 +1,33 @@
-# Car Dealership Console Application
+# Car Dealership — Modernization Integration Review
 
-[![Maven CI](https://github.com/danwiz/Project0-Cardealership-Maven/actions/workflows/maven.yml/badge.svg)](https://github.com/danwiz/Project0-Cardealership-Maven/actions/workflows/maven.yml)
+> **Draft code migration. Not production-ready, not a release.** This branch presents a controlled port of the preserved Java training project into the Maven portfolio target. The original repository and historical Git objects remain preserved.
 
-A legacy Java console application that models customer and employee workflows for a small car dealership. The project includes user registration and authentication, vehicle inventory, purchase offers, payment handling, and file-based persistence.
+## Project overview
 
-## Project status
+Java console dealership training application with vehicle inventory, customer/staff accounts, purchase requests, reviewer authorization, payment/ownership workflows, persistence and characterization tests. The modernization introduces typed-domain service ports, JDBC/H2/PostgreSQL boundaries, verified sessions, safer credential handling, and transactional purchase designs. These are engineering demonstrations and are **not approved for real customer, payment or financial data**.
 
-This repository is the authoritative modernization target for the original dealership project. It preserves the initial training implementation while the codebase is being upgraded for reproducible builds, automated testing, continuous integration, and professional portfolio presentation.
+## Status and review
 
-The application is not yet considered production-ready or pin-ready.
+The maintainer approved the 31 historical source dispositions and 12 destination-class handling proposals on 2026-11-05. Independent architecture, AppSec and QA review and 14 acceptance/release controls remain open. The separate [governance PR #13](https://github.com/danwiz/Project0-Cardealership-Maven/pull/13) records those approvals. **No merge, deployment or release has been completed.**
 
-## Current capabilities
+Read [Stage 28 integration review](docs/integration/STAGE28_CODE_INTEGRATION_REVIEW_2026-11-05.md) for source commit hashes, provenance, scope and gates.
 
-- Customer and employee registration and login flows
-- Vehicle inventory and dealership offer management
-- Customer purchase requests
-- Employee offer review and approval workflows
-- Payment-related domain behavior
-- Java object serialization for local persistence
-- Console-based navigation and interaction
+## Development environment
 
-## Technology
+- Java 11 or Java 17, Maven with supported JUnit 5/Jupiter and Surefire 3.6.0.
+- Java 11 bytecode compilation target; Maven project name `cardealer`.
+- H2 and PostgreSQL JDBC, with disposable PostgreSQL 16 required for specific security, credential and transaction tests.
 
-- Java 17
-- Maven
-- Object-oriented domain and service classes
-- Local file serialization
-- Log4j API 2.26.1
-- JUnit 4.13.2
-- GitHub Actions
-- Dependabot
-
-## Repository layout
-
-```text
-src/main/java/        Application source
-src/main/resources/   Runtime resources
-src/test/java/        Automated tests
-pom.xml               Maven project configuration
-```
-
-## Build and test
-
-Requirements:
-
-- JDK 17
-- Maven 3.9 or later
-
-Run the full validation lifecycle:
+For an isolated test-only environment:
 
 ```bash
-mvn --batch-mode --no-transfer-progress verify
+mvn --batch-mode --no-transfer-progress clean verify
 ```
 
-The GitHub Actions workflow runs Maven validation and verification on pushes and pull requests to `master`. The workflow can also be started manually from the Actions tab.
+Database integration tests require the documented `DEALERSHIP_PG_TEST_URL`, `DEALERSHIP_PG_TEST_USER`, and `DEALERSHIP_PG_TEST_PASSWORD` **synthetic, local-only** CI variables and a PostgreSQL 16 instance. Do not use live credentials. The pull-request CI runs a disposable PostgreSQL 16 service and attempts full plus security-selected JUnit suites on Java 11/17.
 
-## Dependency maintenance
+Do not assume green compile or isolated smoke tests imply application production security. Follow the Stage 28 review register and inspect CI evidence tied to the exact PR commit.
 
-Dependabot checks Maven dependencies and GitHub Actions weekly. Automated update pull requests must still pass CI and receive human review before merge.
+## Origin and historical preservation
 
-## Modernization roadmap
-
-- Confirm the first clean Java 17 Maven build
-- Remove remaining IDE-generated and local-only files
-- Refactor console, service, persistence, and domain concerns
-- Replace broad exception printing with structured error handling
-- Add unit tests for core domain and service behavior
-- Add sample terminal sessions and architecture documentation
-- Review authentication and data handling for security risks
-
-## Known limitations
-
-- The current implementation is a legacy training application.
-- Persistence is based on local Java serialization rather than a database.
-- Input validation and error handling require improvement.
-- Some menu and workflow logic is tightly coupled to console input/output.
-- The project has not yet completed a clean-build and security review.
-
-## Portfolio gate
-
-This repository should be pinned only after it has:
-
-- a reproducible Maven build;
-- passing automated tests and CI;
-- a supported Java version;
-- clear setup and execution instructions;
-- no credentials, private data, generated binaries, or local configuration;
-- documented architecture, limitations, and authorship.
-
-## Origin and authorship
-
-This project originated as a Java training assignment and is maintained here as a modernization and software-engineering portfolio exercise by Dane Wisdom.
+This is a modernization of an academic Java training application. Original source/attribution, file-serialization behavior, compiled historical artifacts, and original build conventions are retained in Git history and the separately preserved source archive. No rewriting or deletion of original Git history was authorized.
