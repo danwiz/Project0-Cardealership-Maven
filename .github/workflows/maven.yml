@@ -1,11 +1,10 @@
-name: Maven CI
+name: Stage28 Controlled Maven Integration CI
 
 on:
   push:
     branches: [master]
   pull_request:
     branches: [master]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,21 +14,167 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  verify:
+    name: Verify on Java ${{ matrix.java }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['11', '17']
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dealership_ci_owner
+          POSTGRES_PASSWORD: ci-only-postgres-fixture
+          POSTGRES_DB: dealership_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dealership_ci_owner -d dealership_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DEALERSHIP_PG_TEST_URL: jdbc:postgresql://localhost:5432/dealership_ci
+      DEALERSHIP_PG_TEST_USER: dealership_ci_owner
+      DEALERSHIP_PG_TEST_PASSWORD: ci-only-postgres-fixture
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Set up Java 17
+      - name: Check out exact reviewed PR head or master push
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify immutable Git checkout
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Set up Java
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: ${{ matrix.java }}
           cache: maven
+      - name: Enable logical decoding in disposable CI PostgreSQL only
+        shell: bash
+        run: |
+          set -euo pipefail
+          pg_container='${{ job.services.postgres.id }}'
+          docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -v ON_ERROR_STOP=1 -c "ALTER SYSTEM SET wal_level = 'logical'"
+          docker restart "$pg_container"
+          ready=0
+          for attempt in {1..30}; do
+            if docker exec "$pg_container" pg_isready -U dealership_ci_owner -d dealership_ci >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ready" -eq 1
+          actual=$(docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -At -c 'SHOW wal_level')
+          test "$actual" = 'logical'
+      - name: Display tool versions
+        run: |
+          java -version
+          mvn --version
+      - name: Prepare CI log directory
+        run: mkdir -p ci-logs
+      - name: Compile production sources
+        shell: bash
+        run: |
+          set -o pipefail
+          mvn --batch-mode --no-transfer-progress clean compile 2>&1 | tee ci-logs/compile-java-${{ matrix.java }}.log
+      - name: Run characterization tests
+        shell: bash
+        run: |
+          set -o pipefail
+          mvn --batch-mode --no-transfer-progress test 2>&1 | tee ci-logs/test-java-${{ matrix.java }}.log
+      - name: Verify package lifecycle
+        shell: bash
+        run: |
+          set -o pipefail
+          mvn --batch-mode --no-transfer-progress verify 2>&1 | tee ci-logs/verify-java-${{ matrix.java }}.log
 
-      - name: Validate Maven project
-        run: mvn --batch-mode --no-transfer-progress validate
+      - name: Fail closed on complete JUnit roster counts
+        run: |
+          python3 ci/stage28_check_surefire.py full 352 90 target/surefire-reports ci-evidence/full-${{ matrix.java }}.json
+      - name: Upload full JUnit XML before changing filter
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: full-surefire-java-${{ matrix.java }}
+          path: target/surefire-reports/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Run both uppercase and lowercase SECURITY tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf target/surefire-reports
+          mvn --batch-mode --no-transfer-progress '-Dgroups=SECURITY | security' test
+      - name: Fail closed on SECURITY tag subset counts
+        run: |
+          python3 ci/stage28_check_surefire.py security 123 46 target/surefire-reports ci-evidence/security-${{ matrix.java }}.json
+      - name: Upload security-filtered JUnit XML
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: security-surefire-java-${{ matrix.java }}
+          path: target/surefire-reports/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload draft count-evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: integration-counts-java-${{ matrix.java }}
+          path: ci-evidence/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload Maven diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: maven-diagnostics-java-${{ matrix.java }}
+          path: ci-logs/
+          if-no-files-found: error
+          retention-days: 14
 
-      - name: Compile and test
-        run: mvn --batch-mode --no-transfer-progress verify
+  diagnostics:
+    name: Diagnostics for Java ${{ matrix.java }}
+    if: always()
+    needs: verify
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        java:
+          - '11'
+          - '17'
+
+    steps:
+      - name: Download Maven diagnostics
+        uses: actions/download-artifact@v6
+        with:
+          name: maven-diagnostics-java-${{ matrix.java }}
+          path: diagnostics
+
+      - name: Print relevant Maven diagnostic tail
+        shell: bash
+        run: |
+          echo "Maven diagnostics for Java ${{ matrix.java }}"
+          if [[ -f diagnostics/compile-java-${{ matrix.java }}.log ]]; then
+            tail -n 60 diagnostics/compile-java-${{ matrix.java }}.log
+          elif [[ -f diagnostics/test-java-${{ matrix.java }}.log ]]; then
+            tail -n 60 diagnostics/test-java-${{ matrix.java }}.log
+          elif [[ -f diagnostics/verify-java-${{ matrix.java }}.log ]]; then
+            tail -n 60 diagnostics/verify-java-${{ matrix.java }}.log
+          else
+            echo "No Maven diagnostic log was found."
+            exit 1
+          fi

@@ -1,15 +1,10 @@
-package com.revature.DAOService;  // consider doaService as better package name - change late
+package com.revature.DAOService;
 
-//import src.com.revature.dao;
 import com.revature.cardealer.Data;
 
 public interface DataDAO {
-	
-	public void createData(Data d);
-	
-	public Data readData(String caption);
 
+    SaveResult saveData(Data data, String filename);
+
+    LoadResult loadData(String filename);
 }
-
-
-
