@@ -10,7 +10,7 @@ The owner expressly authorized the 31 historical source-disposition recommendati
 
 **Approved scope:** 31 historical dispositions (six master conflicts, fifteen short-branch conflicts, nine short-only files, and one auto-merge semantic test), under their previously documented *proposed resolutions*. Do not import legacy unsafe APIs verbatim; preserve the original source/history and do not eliminate security safeguards. Distinct historical conflict records can reference the same file.
 
-**Pending:** Canonical Option A ADR formal review/signoff, **12 destination-class replacement decisions**, all mandatory release verification gates, reviewer signoffs, and actual integration PR.
+**Updated owner authorization (2026-11-05):** The owner explicitly approved all twelve C01–C12 destination-class dispositions and authorized moving to the next milestone. Independent architecture/security/QA review and all mandatory release verification gates remain outstanding. Formal Option A ADR signoff and the code-integration PR remain separate controls.
 
 ## 31 individually identified OWNER-APPROVED source decisions
 
@@ -52,24 +52,24 @@ For SO-01 to SO-09, the approved proposal is **historical preservation and behav
 
 Primary historical evidence: [exact conflicts](https://github.com/danwiz/danwiz/blob/audit/portfolio-remediation-plan-20261029/docs/audits/CAR-DEALERSHIP-CONFIRMED-MERGE-TREE-REHEARSAL-2026-10-30.md), [nine short-only dispositions and tag drift](https://github.com/danwiz/danwiz/blob/audit/portfolio-remediation-plan-20261029/docs/audits/CAR-DEALERSHIP-SHORT-ONLY-SOURCE-DISPOSITION-AND-LOGIN-TAG-REVIEW-2026-10-30.md), [Option A draft ADR](https://github.com/danwiz/danwiz/blob/audit/portfolio-remediation-plan-20261029/docs/audits/ADR-CAR-DEALERSHIP-CANONICAL-REPOSITORY-2026-10-29.md).
 
-## Twelve separate Maven destination decisions — NOT yet approved
+## Twelve Maven destination dispositions — OWNER APPROVED 2026-11-05
 
 | ID | Existing destination path | Status |
 | --- | --- | --- |
-| C01 | `src/main/java/com/revature/DAOService/DAOService.java` | OWNER/ARCHITECT DECISION PENDING |
-| C02 | `src/main/java/com/revature/DAOService/DataDAO.java` | OWNER/ARCHITECT DECISION PENDING |
-| C03 | `src/main/java/com/revature/cardealer/Car.java` | OWNER/ARCHITECT DECISION PENDING |
-| C04 | `src/main/java/com/revature/cardealer/CarDealership.java` | OWNER/ARCHITECT DECISION PENDING |
-| C05 | `src/main/java/com/revature/cardealer/Data.java` | OWNER/ARCHITECT DECISION PENDING |
-| C06 | `src/main/java/com/revature/cardealer/Offer.java` | OWNER/ARCHITECT DECISION PENDING |
-| C07 | `src/main/java/com/revature/cardealer/Payments.java` | OWNER/ARCHITECT DECISION PENDING |
-| C08 | `src/main/java/com/revature/cardealer/User.java` | OWNER/ARCHITECT DECISION PENDING |
-| C09 | `src/main/java/com/revature/service/AdminLoginService.java` | OWNER/ARCHITECT DECISION PENDING |
-| C10 | `src/main/java/com/revature/service/CustomerLoginService.java` | OWNER/ARCHITECT DECISION PENDING |
-| C11 | `src/main/java/com/revature/service/EmployeeLoginService.java` | OWNER/ARCHITECT DECISION PENDING |
-| C12 | `src/main/java/com/revature/service/UserLoginService.java` | OWNER/ARCHITECT DECISION PENDING |
+| C01 | `src/main/java/com/revature/DAOService/DAOService.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
+| C02 | `src/main/java/com/revature/DAOService/DataDAO.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
+| C03 | `src/main/java/com/revature/cardealer/Car.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
+| C04 | `src/main/java/com/revature/cardealer/CarDealership.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
+| C05 | `src/main/java/com/revature/cardealer/Data.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
+| C06 | `src/main/java/com/revature/cardealer/Offer.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
+| C07 | `src/main/java/com/revature/cardealer/Payments.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
+| C08 | `src/main/java/com/revature/cardealer/User.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
+| C09 | `src/main/java/com/revature/service/AdminLoginService.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
+| C10 | `src/main/java/com/revature/service/CustomerLoginService.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
+| C11 | `src/main/java/com/revature/service/EmployeeLoginService.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
+| C12 | `src/main/java/com/revature/service/UserLoginService.java` | OWNER APPROVED 2026-11-05 — independent architecture/security/QA review pending |
 
-For each collision, compare existing Maven implementation with the frozen source, decide preserve/replace/refactor/retire, confirm behavioral and serial-data compatibility, document rollback, and obtain review before modifying destination production code.
+Each approved disposition adopts the individual Stage 27 recommended handling, **not** blanket acceptance of a blind source replacement. Compare existing Maven implementation with frozen source; verify semantic, serial-data, and interface compatibility; preserve rollback; and obtain independent architecture, security, and QA review before promotion. Owner approval does not imply reviewer signoff.
 
 ## Mandatory release acceptance checklist
 
@@ -94,7 +94,7 @@ For each collision, compare existing Maven implementation with the frozen source
 
 ## Controlled next actions
 
-1. Collect independent review and owner/architect dispositions for C01–C12 and formalize Option A ADR.
+1. Record owner-approved C01–C12 dispositions and collect independent architecture, security and QA review; formalize Option A ADR.
 2. Reconcile Maven PR #12 (Surefire) and PR #106/#107 content without merging their source PR stacks.
 3. Prepare a **separate properly parented code-integration branch** from the verified current Maven master SHA.
 4. Open a **separate draft code-integration PR** only after candidate source, destination collisions, provenance, and CI workflow are reviewed.
