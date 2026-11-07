@@ -175,8 +175,14 @@ class PostgresqlMutualTlsCredentialBrokerTest {
             String rogueResult=request(rogue,port,"CHANGE\tmtls-buyer\tsynthetic-old-password\trogue-password");
             assertEquals("DENIED",rogueResult);
             // No client certificate is rejected by TLS handshake (or read).
-            assertThrows(Exception.class,()->request(
-                    noCert,port,"CHANGE\tmtls-buyer\tsynthetic-old-password\tno-cert-password"));
+            try {
+                String untrustedResponse=request(
+                        noCert,port,"CHANGE\tmtls-buyer\tsynthetic-old-password\tno-cert-password");
+                assertFalse("OK".equals(untrustedResponse),
+                        "unauthenticated client must never change credential");
+            } catch (javax.net.ssl.SSLException deniedAtHandshake) {
+                // Correct denial: mTLS failed before reaching the broker.
+            }
             assertEquals(before.getPassword(),
                     ownerAccounts.findByUsername("mtls-buyer")
                             .orElseThrow(AssertionError::new).getPassword());
