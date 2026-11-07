@@ -50,7 +50,7 @@ jobs:
             org.apache.maven.plugins:maven-dependency-plugin:3.11.0:tree \
             -DoutputType=json -DoutputFile=wave19-sbom/dependency-tree.json
           mvn --batch-mode --no-transfer-progress -DskipTests \
-            -DoutputFormat=all \
+            -DoutputFormat=all -DincludeTestScope=true -Dcyclonedx.skipAttach=true \
             org.cyclonedx:cyclonedx-maven-plugin:2.9.3:makeAggregateBom
 
       - name: Require complete inventory structure and source SHA
