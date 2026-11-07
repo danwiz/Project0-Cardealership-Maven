@@ -11,6 +11,7 @@ import java.util.Optional;
 import com.revature.cardealer.AccountRole;
 import com.revature.cardealer.User;
 import com.revature.service.UserAccountRepository;
+import com.revature.service.TrustedCustomerCredentialWriter;
 
 /**
  * A narrowly scoped customer-registration and account-read adapter.
@@ -26,14 +27,33 @@ import com.revature.service.UserAccountRepository;
  * Schema migrations and function/grant provisioning belong to an independent
  * privileged operator, not this runtime.
  */
-public final class JdbcCustomerOnlyRegistrationRepository implements UserAccountRepository {
+public final class JdbcCustomerOnlyRegistrationRepository implements UserAccountRepository, TrustedCustomerCredentialWriter {
     private final JdbcDatabase database;
     private final JdbcUserAccountRepository reader;
+    private final TrustedCustomerCredentialWriter credentialWriter;
 
     public JdbcCustomerOnlyRegistrationRepository(JdbcDatabase database) {
+        this(database, null);
+    }
+
+    /**
+     * Optional trusted credential capability is separately provisioned.
+     * Never pass the privileged writer to untrusted/public callers.
+     */
+    public JdbcCustomerOnlyRegistrationRepository(
+            JdbcDatabase database, TrustedCustomerCredentialWriter credentialWriter) {
         this.database = Objects.requireNonNull(database, "database");
         this.database.requireCurrentSchema();
         this.reader = new JdbcUserAccountRepository(database);
+        this.credentialWriter = credentialWriter;
+    }
+
+    @Override
+    public boolean rotateCustomerPassword(User current, String plaintext, String replacementEncoded) {
+        if (credentialWriter == null) {
+            throw new SecurityException("trusted customer credential writer is not configured");
+        }
+        return credentialWriter.rotateCustomerPassword(current, plaintext, replacementEncoded);
     }
 
     @Override
