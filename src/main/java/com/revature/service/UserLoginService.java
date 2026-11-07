@@ -90,8 +90,15 @@ public class UserLoginService {
         validateCredential("replacementPassword", replacementPassword);
         User existing = authenticate(currentCredentials)
                 .orElseThrow(() -> new SecurityException("current account authentication required"));
+        String replacementEncoded = passwordHasher.hash(replacementPassword);
+        if (userRepository instanceof TrustedCustomerCredentialWriter) {
+            // The trusted writer independently revalidates the persisted customer,
+            // credential plaintext, and session generation while holding the row.
+            return ((TrustedCustomerCredentialWriter) userRepository).rotateCustomerPassword(
+                    existing, currentCredentials.getPassword(), replacementEncoded);
+        }
         return userRepository.updateCredentialIfCurrent(existing.getUsername(),
-                existing.getPassword(), passwordHasher.hash(replacementPassword));
+                existing.getPassword(), replacementEncoded);
     }
 
     /**
