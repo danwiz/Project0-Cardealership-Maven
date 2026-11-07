@@ -120,7 +120,7 @@ class ConcurrentAdministratorRevocationRegressionTest {
         }
     }
 
-    private static final class BarrierRepository implements UserAccountRepository {
+    private static final class BarrierRepository implements UserAccountRepository, AuthorizedAdminAccountWriter {
         private final UserAccountRepository delegate;
         private final Operation operation;
         final CountDownLatch reachedWriter = new CountDownLatch(1);
@@ -141,6 +141,37 @@ class ConcurrentAdministratorRevocationRegressionTest {
                 Thread.currentThread().interrupt();
                 throw new IllegalStateException("Interrupted while waiting at writer", e);
             }
+        }
+
+
+        /**
+         * Pause before entering the *trusted atomic operation*, after the
+         * service has authenticated the acting user. Revocation must be
+         * observed by that operation, not merely at the service-level check.
+         */
+        private AuthorizedAdminAccountWriter trusted() {
+            if (!(delegate instanceof AuthorizedAdminAccountWriter)) {
+                throw new AssertionError("test repository lacks trusted administration port");
+            }
+            return (AuthorizedAdminAccountWriter) delegate;
+        }
+
+        @Override public User provisionAuthorized(User actor, String plaintext, User newUser) {
+            if (operation == Operation.PROVISION && "newEmployee".equals(newUser.getUsername())) {
+                pause();
+            }
+            return trusted().provisionAuthorized(actor, plaintext, newUser);
+        }
+
+        @Override public boolean changeRoleAuthorized(User actor, String plaintext,
+                String target, AccountRole expected, AccountRole replacement) {
+            if (operation == Operation.PROMOTE && "buyer".equals(target)) pause();
+            return trusted().changeRoleAuthorized(actor, plaintext, target, expected, replacement);
+        }
+
+        @Override public boolean removeAuthorized(User actor, String plaintext, String target) {
+            if (operation == Operation.DELETE && "buyer".equals(target)) pause();
+            return trusted().removeAuthorized(actor, plaintext, target);
         }
 
         @Override public User save(User user) {
