@@ -141,7 +141,10 @@ printf '%s\n' "W28_SYNC_PHYSICAL_STANDBY_REMOTE_APPLY_CONFIRMED"
 
 # Losing a synchronous standby must not produce a successful COMMIT reply;
 # a real dealership approval transaction is launched on the old primary.
-docker network disconnect -f "$network" "$primary"
+# Detach the *replica* rather than the primary: primary's published
+# localhost:55421 TCP mapping must remain reachable by the real JDBC client.
+# Established walsender connection is separately terminated below.
+docker network disconnect -f "$network" "$standby"
 # A Docker interface disconnect does not necessarily immediately close an
 # established PostgreSQL walsender TCP session. Force the disposable sender
 # closed, and require pg_stat_replication to lose its streaming peer BEFORE
@@ -196,6 +199,9 @@ printf '%s\n' "W28_SYNC_REMOTE_APPLY_COMMIT_BLOCKED_WITH_REPLICA_DISCONNECTED"
 # no production client/router/HA controller. The old client must see UNKNOWN.
 docker kill -s KILL "$primary" >/dev/null
 test "$(docker inspect -f '{{.State.Running}}' "$primary")" = false
+# Restore the promoted standby's published localhost:55422 endpoint only
+# AFTER fencing the former primary, so a new JDBC client can reconcile.
+docker network connect "$network" "$standby"
 promoted=$(standby_sql "SELECT pg_promote(true,30)")
 test "$promoted" = t
 test "$(standby_sql "SELECT pg_is_in_recovery()")" = f
