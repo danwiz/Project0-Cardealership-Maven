@@ -4,7 +4,7 @@
 -- principal that invokes this function has NO direct account SELECT or UPDATE.
 --
 -- Preconditions created separately by schema owner:
---  __SCHEMA__.credential_rotation_keys(key_id int, secret bytea)
+--  __SCHEMA__.credential_rotation_keys(key_id int, key_bytes bytea)
 --  __SCHEMA__.credential_rotation_nonces(nonce uuid, username text)
 --  pgcrypto installed as extension in public.
 --
@@ -25,7 +25,7 @@ SET search_path = pg_catalog, pg_temp
 AS $authorized$
 DECLARE
     current_account record;
-    secret bytea;
+    v_secret bytea;
     message text;
     calculated text;
     used_nonce boolean;
@@ -53,17 +53,17 @@ BEGIN
         RETURN false;
     END IF;
 
-    SELECT secret INTO secret
+    SELECT key_bytes INTO v_secret
       FROM __SCHEMA__.credential_rotation_keys
      WHERE key_id = 1;
-    IF secret IS NULL OR octet_length(secret) < 32 THEN
+    IF v_secret IS NULL OR octet_length(v_secret) < 32 THEN
         RETURN false;
     END IF;
 
     message := p_username || chr(10) || p_revision::text || chr(10)
                || p_expected_hash || chr(10) || p_new_hash || chr(10)
                || p_nonce::text;
-    calculated := encode(public.hmac(convert_to(message, 'UTF8'),secret,'sha256'),'hex');
+    calculated := encode(public.hmac(convert_to(message, 'UTF8'),v_secret,'sha256'),'hex');
     IF calculated <> p_hmac_hex THEN
         RETURN false;
     END IF;
