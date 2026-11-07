@@ -158,7 +158,7 @@ data={
     "primary_lsn_before_crash":sys.argv[3],
     "standby_replay_lsn_before_promotion":sys.argv[4],
     "standby_streaming_verified":True,
-    "synthetic_receipt_replayed_before_promotion":True,
+    "dealership_sale_replayed_before_promotion":True,
     "primary_stopped_before_promotion":True,
     "standby_promoted":True,
     "actual_backend_commit_reply_dropped":True,
