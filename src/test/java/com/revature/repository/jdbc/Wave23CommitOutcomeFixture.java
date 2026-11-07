@@ -92,7 +92,7 @@ public final class Wave23CommitOutcomeFixture {
                             && expected.getMessage().contains("uncertain");
                     if (!uncertain) throw expected;
                 }
-                if (!uncertain || !proxy.awaitDroppedCommit()) {
+                if (!uncertain || !proxy.awaitDropped()) {
                     throw new AssertionError("backend COMMIT acknowledgment was not confirmed lost");
                 }
                 System.out.println("W23_ACTUAL_COMMIT_REPLY_DROPPED_AND_CLIENT_UNCERTAIN_PASS");
