@@ -1,6 +1,6 @@
 -- Wave29 disposable PostgreSQL16 fixture. NOT a production migration.
 -- The SQL executor receives EXECUTE only; no keys, accounts or nonce table grants.
--- Owner-created tables (separate fixture transaction):
+-- Wave30 test-only owner issuance receipt strengthens VERIFY_ONLY boundary.\n-- Owner-created tables (separate fixture transaction):
 -- __SCHEMA__.w29_signing_keys(key_id int, key_bytes bytea, state text,
 --                            not_before_epoch bigint, not_after_epoch bigint,
 --                            signing_disabled_epoch bigint)
@@ -79,6 +79,24 @@ BEGIN
   v_expected := encode(public.hmac(
      convert_to(v_message,'UTF8'), v_key.key_bytes,'sha256'), 'hex');
   IF v_expected <> p_signature THEN RETURN false; END IF;
+
+  -- Wave30: a VERIFY_ONLY key is not evidence that an intent was truly
+  -- issued before key cutover. A stolen old key could otherwise backdate
+  -- issued_at and forge an apparently pre-cutover request. Require a receipt
+  -- that an independently protected owner registered while signing was
+  -- active, matching exact nonce, key, subject, issue time and MAC. The SQL
+  -- executor has no SELECT/INSERT privilege on this table.
+  IF v_key.state = 'VERIFY_ONLY' THEN
+    PERFORM 1
+      FROM __SCHEMA__.w30_issued_intents
+     WHERE nonce = p_nonce
+       AND key_id = p_key_id
+       AND username = p_username
+       AND issued_epoch = p_issued_epoch
+       AND signed_hmac = p_signature
+       AND registered_at < to_timestamp(v_key.signing_disabled_epoch);
+    IF NOT FOUND THEN RETURN false; END IF;
+  END IF;
 
   INSERT INTO __SCHEMA__.w29_used_nonces(nonce,key_id,username)
        VALUES(p_nonce,p_key_id,p_username)
