@@ -60,12 +60,17 @@ public final class JdbcPurchaseApprovalService implements ApplicationPorts.Purch
             // Each attempt must independently revalidate the live verified session.
             // Do not retain an authorization decision through a transaction retry.
             authorization.requireAuthorized(reviewer, Permission.REVIEW_PURCHASE_REQUESTS);
+            // Important: a fatal PostgreSQL error while COMMIT is being sent
+            // (for example SQLSTATE 57P01 on an abruptly lost primary) cannot
+            // be treated as proof that the transaction rolled back.
+            boolean commitAttempted = false;
             try (Connection connection = database.openConnection()) {
                 connection.setAutoCommit(false);
                 connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
                 try {
                     int price = approveInTransaction(
                             connection, reviewer, requestId, paymentMonths, rejectOtherPending);
+                    commitAttempted = true;
                     connection.commit();
                     return price;
                 } catch (SQLException | RuntimeException failure) {
@@ -77,6 +82,18 @@ public final class JdbcPurchaseApprovalService implements ApplicationPorts.Purch
                     throw failure;
                 }
             } catch (SQLException failure) {
+                // Any non-conflict error from COMMIT itself has an unknown
+                // durability outcome, independent of the SQLSTATE family.
+                // Even SQLSTATE 57P01/FATAL can arrive after the client
+                // attempted COMMIT. Do not retry until durable request and
+                // ownership/payment-plan state are reconciled.
+                if (commitAttempted
+                        && (!isRetryableTransactionConflict(failure)
+                            || failure.getSuppressed().length != 0)) {
+                    throw new IllegalStateException(
+                            "JDBC purchase outcome uncertain after COMMIT attempt; "
+                            + "reconcile the same request ID before retry", failure);
+                }
                 // 40001 and 40P01 denote server-aborted serialization/deadlock
                 // transactions. Reexecute the *whole* unit of work, with the
                 // exact same durable request ID and terms, at most twice more.
