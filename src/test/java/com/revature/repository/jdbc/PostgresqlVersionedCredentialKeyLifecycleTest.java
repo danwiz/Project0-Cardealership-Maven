@@ -130,6 +130,10 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
             assertDenied42501(executeDb,"SELECT nonce FROM w29_used_nonces");
             assertDenied42501(executeDb,"SELECT nonce FROM w30_issued_intents");
             assertDenied42501(executeDb,
+                    "INSERT INTO w30_issued_intents"
+                    +"(nonce,key_id,username,issued_epoch,signed_hmac)"
+                    +" VALUES(gen_random_uuid(),1,'buyer',0,'forged')");
+            assertDenied42501(executeDb,
                     "UPDATE accounts SET encoded_credential='forged' WHERE username='buyer'");
             assertDenied42501(executeDb,
                     "UPDATE accounts SET role='ADMINISTRATOR' WHERE username='buyer'");
