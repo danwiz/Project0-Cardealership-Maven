@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Timeout;
 import com.revature.cardealer.AccountRole;
 import com.revature.cardealer.User;
 import com.revature.service.Pbkdf2PasswordHasher;
+import com.revature.service.UserAccountRepository;
+import com.revature.service.UserLoginService;
 import com.revature.support.TestAccounts;
 
 /** Transactional customer password rotation on a disposable PostgreSQL 16 schema. */
@@ -54,13 +56,22 @@ class PostgresqlCustomerCredentialRotationTest {
             TestAccounts.seed(accounts, AccountRole.CUSTOMER, "buyer", "first-password");
             User before = accounts.findByUsername("buyer").orElseThrow(AssertionError::new);
             JdbcTrustedCustomerCredentialWriter writer = new JdbcTrustedCustomerCredentialWriter(db);
-            String secondHash = new Pbkdf2PasswordHasher().hash("second-password");
 
-            assertTrue(writer.rotateCustomerPassword(before, "first-password", secondHash));
+            // Public service uses the separately injected trusted writer, rather
+            // than unrestricted hash-only account UPDATE.
+            UserLoginService service = new UserLoginService(
+                    new JdbcCustomerOnlyRegistrationRepository(db, writer),
+                    (UserAccountRepository) null);
+            User current = new User();
+            current.setUsername("buyer");
+            current.setPassword("first-password");
+            current.setRole(AccountRole.CUSTOMER);
+            assertTrue(service.changePassword(current, "second-password"));
             User after = accounts.findByUsername("buyer").orElseThrow(AssertionError::new);
             assertNotEquals(before.getSessionRevision(), after.getSessionRevision());
             assertNotEquals(before.getPassword(), after.getPassword());
             assertEquals(AccountRole.CUSTOMER, after.getRole());
+            assertFalse(service.authenticate(current).isPresent());
             assertFalse(new Pbkdf2PasswordHasher().matches("first-password", after.getPassword()));
             assertTrue(new Pbkdf2PasswordHasher().matches("second-password", after.getPassword()));
             assertThrows(SecurityException.class,
