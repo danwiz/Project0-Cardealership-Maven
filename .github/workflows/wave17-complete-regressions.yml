@@ -1,4 +1,4 @@
-name: Wave23 Public Registration SQL Isolation and Full PG16 Regression
+name: Wave24 Three-Principal PostgreSQL16 Isolation and Full Regression
 
 on:
   pull_request:
@@ -81,10 +81,10 @@ jobs:
           set -euo pipefail
           mkdir -p wave17-logs
           mvn --batch-mode --no-transfer-progress clean verify 2>&1 | tee wave17-logs/full-${{ matrix.java }}.log
-      - name: Check updated 369-case and 99-class full roster
+      - name: Check updated 370-case and 100-class full roster
         shell: bash
         run: |
-          python3 ci/stage28_check_surefire.py full 369 99 target/surefire-reports wave17-evidence/full-${{ matrix.java }}.json
+          python3 ci/stage28_check_surefire.py full 370 100 target/surefire-reports wave17-evidence/full-${{ matrix.java }}.json
       - name: Assert three actual PostgreSQL16 actor-revocation interleavings passed
         shell: bash
         run: |
@@ -115,6 +115,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 ci/wave23_check_public_registrar.py wave17-evidence/wave23-registrar-${{ matrix.java }}.json
+      - name: Require real PostgreSQL16 three-principal identity isolation test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave24_check_three_principal_isolation.py wave17-evidence/wave24-roles-${{ matrix.java }}.json
       - name: Preserve full JUnit reports
         if: always()
         uses: actions/upload-artifact@v6
@@ -132,7 +137,7 @@ jobs:
           set -euo pipefail
           rm -rf target/surefire-reports
           mvn --batch-mode --no-transfer-progress '-Dgroups=SECURITY | security' test
-          python3 ci/stage28_check_surefire.py security 140 55 target/surefire-reports wave17-evidence/security-${{ matrix.java }}.json
+          python3 ci/stage28_check_surefire.py security 141 56 target/surefire-reports wave17-evidence/security-${{ matrix.java }}.json
       - name: Preserve security JUnit reports
         if: always()
         uses: actions/upload-artifact@v6
