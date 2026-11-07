@@ -1,4 +1,4 @@
-name: Wave26 Mutual-TLS Credential Broker and Full PG16 Regression
+name: Wave27 Database Signed Credential Intent and Full PG16 Regression
 
 on:
   pull_request:
@@ -81,10 +81,10 @@ jobs:
           set -euo pipefail
           mkdir -p wave17-logs
           mvn --batch-mode --no-transfer-progress clean verify 2>&1 | tee wave17-logs/full-${{ matrix.java }}.log
-      - name: Check updated 372-case and 102-class full roster
+      - name: Check updated 373-case and 103-class full roster
         shell: bash
         run: |
-          python3 ci/stage28_check_surefire.py full 372 102 target/surefire-reports wave17-evidence/full-${{ matrix.java }}.json
+          python3 ci/stage28_check_surefire.py full 373 103 target/surefire-reports wave17-evidence/full-${{ matrix.java }}.json
       - name: Assert three actual PostgreSQL16 actor-revocation interleavings passed
         shell: bash
         run: |
@@ -130,6 +130,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 ci/wave26_check_mtls_broker.py wave17-evidence/wave26-mtls-${{ matrix.java }}.json
+      - name: Require PostgreSQL16 compromised SQL writer signed-intent negative test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave27_check_signed_credential_intent.py wave17-evidence/wave27-signed-${{ matrix.java }}.json
       - name: Preserve full JUnit reports
         if: always()
         uses: actions/upload-artifact@v6
@@ -147,7 +152,7 @@ jobs:
           set -euo pipefail
           rm -rf target/surefire-reports
           mvn --batch-mode --no-transfer-progress '-Dgroups=SECURITY | security' test
-          python3 ci/stage28_check_surefire.py security 143 58 target/surefire-reports wave17-evidence/security-${{ matrix.java }}.json
+          python3 ci/stage28_check_surefire.py security 144 59 target/surefire-reports wave17-evidence/security-${{ matrix.java }}.json
       - name: Preserve security JUnit reports
         if: always()
         uses: actions/upload-artifact@v6
