@@ -132,6 +132,12 @@ baseline_standby_lsn=$(standby_sql "SELECT pg_last_wal_replay_lsn()")
 # locally on its Docker loopback port. This guarantees no further WAL is
 # transported to the physical standby before the synthetic purchase commits.
 docker network disconnect -f "$network" "$primary"
+# A Docker interface disconnect does not necessarily immediately close an
+# established PostgreSQL walsender TCP session. Force the disposable sender
+# closed, and require pg_stat_replication to lose its streaming peer BEFORE
+# any business COMMIT is attempted.
+primary_sql "SELECT pg_terminate_backend(pid) FROM pg_stat_replication" >/dev/null || true
+printf '%s\\n' "W28: replication sender termination requested after lab network isolation"
 test "$(docker inspect -f '{{.State.Running}}' "$primary")" = true
 test "$(primary_sql "SELECT pg_is_in_recovery()")" = f
 # Wait until the old primary no longer reports a streaming replica.
