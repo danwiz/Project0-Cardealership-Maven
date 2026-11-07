@@ -1,4 +1,4 @@
-name: Wave17 Complete Maven + Security Roster Verification
+name: Wave18 PostgreSQL16 + Complete Maven Security Verification
 
 on:
   pull_request:
@@ -81,10 +81,15 @@ jobs:
           set -euo pipefail
           mkdir -p wave17-logs
           mvn --batch-mode --no-transfer-progress clean verify 2>&1 | tee wave17-logs/full-${{ matrix.java }}.log
-      - name: Check updated 359-case and 92-class full roster
+      - name: Check updated 362-case and 93-class full roster
         shell: bash
         run: |
-          python3 ci/stage28_check_surefire.py full 359 92 target/surefire-reports wave17-evidence/full-${{ matrix.java }}.json
+          python3 ci/stage28_check_surefire.py full 362 93 target/surefire-reports wave17-evidence/full-${{ matrix.java }}.json
+      - name: Assert three actual PostgreSQL16 actor-revocation interleavings passed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave18_check_pg_admin.py wave17-evidence/pg16-actor-${{ matrix.java }}.json
       - name: Preserve full JUnit reports
         if: always()
         uses: actions/upload-artifact@v6
@@ -102,7 +107,7 @@ jobs:
           set -euo pipefail
           rm -rf target/surefire-reports
           mvn --batch-mode --no-transfer-progress '-Dgroups=SECURITY | security' test
-          python3 ci/stage28_check_surefire.py security 130 48 target/surefire-reports wave17-evidence/security-${{ matrix.java }}.json
+          python3 ci/stage28_check_surefire.py security 133 49 target/surefire-reports wave17-evidence/security-${{ matrix.java }}.json
       - name: Preserve security JUnit reports
         if: always()
         uses: actions/upload-artifact@v6
