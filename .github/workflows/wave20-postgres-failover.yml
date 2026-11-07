@@ -1,0 +1,51 @@
+name: Wave20 Disposable PostgreSQL16 Physical Failover Lab
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave20-ha-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  physical-replication-lab:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Checkout exact reviewed PR head without persisted credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Verify immutable checkout and Docker availability
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          docker info >/dev/null
+          bash -n ci/wave20_pg16_replica_lab.sh
+      - name: Run isolated PostgreSQL16 primary-to-standby promotion and receipt replay
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p wave20-ha
+          bash ci/wave20_pg16_replica_lab.sh 2>&1 | tee wave20-ha/run.log
+      - name: Preserve recovery evidence even if lab fails
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave20-physical-ha-${{ github.event.pull_request.head.sha }}
+          path: wave20-ha/
+          if-no-files-found: warn
+          retention-days: 14
