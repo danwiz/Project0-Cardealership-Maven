@@ -1,4 +1,4 @@
-name: Wave21 Customer SQL Boundary and Full Maven Regression
+name: Wave22 Trusted Customer Credential and Full PG16 Regression
 
 on:
   pull_request:
@@ -81,10 +81,10 @@ jobs:
           set -euo pipefail
           mkdir -p wave17-logs
           mvn --batch-mode --no-transfer-progress clean verify 2>&1 | tee wave17-logs/full-${{ matrix.java }}.log
-      - name: Check updated 367-case and 97-class full roster
+      - name: Check updated 368-case and 98-class full roster
         shell: bash
         run: |
-          python3 ci/stage28_check_surefire.py full 367 97 target/surefire-reports wave17-evidence/full-${{ matrix.java }}.json
+          python3 ci/stage28_check_surefire.py full 368 98 target/surefire-reports wave17-evidence/full-${{ matrix.java }}.json
       - name: Assert three actual PostgreSQL16 actor-revocation interleavings passed
         shell: bash
         run: |
@@ -105,6 +105,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 ci/wave21_check_customer_registration.py wave17-evidence/wave21-customer-${{ matrix.java }}.json
+      - name: Require real PostgreSQL16 customer credential-rotation regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave22_check_customer_credential.py wave17-evidence/wave22-credential-${{ matrix.java }}.json
       - name: Preserve full JUnit reports
         if: always()
         uses: actions/upload-artifact@v6
@@ -122,7 +127,7 @@ jobs:
           set -euo pipefail
           rm -rf target/surefire-reports
           mvn --batch-mode --no-transfer-progress '-Dgroups=SECURITY | security' test
-          python3 ci/stage28_check_surefire.py security 138 53 target/surefire-reports wave17-evidence/security-${{ matrix.java }}.json
+          python3 ci/stage28_check_surefire.py security 139 54 target/surefire-reports wave17-evidence/security-${{ matrix.java }}.json
       - name: Preserve security JUnit reports
         if: always()
         uses: actions/upload-artifact@v6
