@@ -1,0 +1,165 @@
+name: Wave27 Database Signed Credential Intent and Full PG16 Regression
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave17-full-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  full-verification:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    name: Java ${{ matrix.java }} complete + SECURITY
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['11', '17']
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dealership_ci_owner
+          POSTGRES_PASSWORD: ci-only-postgres-fixture
+          POSTGRES_DB: dealership_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dealership_ci_owner -d dealership_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DEALERSHIP_PG_TEST_URL: jdbc:postgresql://localhost:5432/dealership_ci
+      DEALERSHIP_PG_TEST_USER: dealership_ci_owner
+      DEALERSHIP_PG_TEST_PASSWORD: ci-only-postgres-fixture
+    steps:
+      - name: Exact reviewed branch head without persisted credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Verify exact immutable checkout
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Install Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Enable disposable PostgreSQL logical decoding
+        shell: bash
+        run: |
+          set -euo pipefail
+          pg_container='${{ job.services.postgres.id }}'
+          docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -v ON_ERROR_STOP=1 -c "ALTER SYSTEM SET wal_level = 'logical'"
+          docker restart "$pg_container"
+          for attempt in {1..30}; do
+            if docker exec "$pg_container" pg_isready -U dealership_ci_owner -d dealership_ci >/dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+          actual=$(docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -At -c "SHOW wal_level")
+          test "$actual" = "logical"
+      - name: Full Maven verification (original plus new tests)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wave17-logs
+          mvn --batch-mode --no-transfer-progress clean verify 2>&1 | tee wave17-logs/full-${{ matrix.java }}.log
+      - name: Check updated 373-case and 103-class full roster
+        shell: bash
+        run: |
+          python3 ci/stage28_check_surefire.py full 373 103 target/surefire-reports wave17-evidence/full-${{ matrix.java }}.json
+      - name: Assert three actual PostgreSQL16 actor-revocation interleavings passed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave18_check_pg_admin.py wave17-evidence/pg16-actor-${{ matrix.java }}.json
+      - name: Require two real PostgreSQL16 contention cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave19_check_pg_contention.py wave17-evidence/pg16-contention-${{ matrix.java }}.json
+      - name: Require two non-skipped Wave20 privilege and hasher tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave20_check_account_boundaries.py wave17-evidence/wave20-boundary-${{ matrix.java }}.json
+      - name: Require PostgreSQL16 customer-only registration test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave21_check_customer_registration.py wave17-evidence/wave21-customer-${{ matrix.java }}.json
+      - name: Require real PostgreSQL16 customer credential-rotation regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave22_check_customer_credential.py wave17-evidence/wave22-credential-${{ matrix.java }}.json
+      - name: Require actual PostgreSQL16 hash-blind public registrar test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave23_check_public_registrar.py wave17-evidence/wave23-registrar-${{ matrix.java }}.json
+      - name: Require real PostgreSQL16 three-principal identity isolation test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave24_check_three_principal_isolation.py wave17-evidence/wave24-roles-${{ matrix.java }}.json
+      - name: Require disposable PostgreSQL16 private credential broker regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave25_check_private_broker.py wave17-evidence/wave25-private-${{ matrix.java }}.json
+      - name: Require real mutual-TLS PostgreSQL16 client-identity broker regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave26_check_mtls_broker.py wave17-evidence/wave26-mtls-${{ matrix.java }}.json
+      - name: Require PostgreSQL16 compromised SQL writer signed-intent negative test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave27_check_signed_credential_intent.py wave17-evidence/wave27-signed-${{ matrix.java }}.json
+      - name: Preserve full JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave17-full-java-${{ matrix.java }}
+          path: |
+            target/surefire-reports/
+            wave17-evidence/
+            wave17-logs/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Run SECURITY and security tagged test selection
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf target/surefire-reports
+          mvn --batch-mode --no-transfer-progress '-Dgroups=SECURITY | security' test
+          python3 ci/stage28_check_surefire.py security 144 59 target/surefire-reports wave17-evidence/security-${{ matrix.java }}.json
+      - name: Preserve security JUnit reports
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave17-security-java-${{ matrix.java }}
+          path: |
+            target/surefire-reports/
+            wave17-evidence/
+          if-no-files-found: warn
+          retention-days: 14
