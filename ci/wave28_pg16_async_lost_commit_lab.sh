@@ -131,7 +131,10 @@ baseline_standby_lsn=$(standby_sql "SELECT pg_last_wal_replay_lsn()")
 # Disconnect replication while leaving the original primary accessible
 # locally on its Docker loopback port. This guarantees no further WAL is
 # transported to the physical standby before the synthetic purchase commits.
-docker network disconnect -f "$network" "$primary"
+# Detach the *replica* rather than the primary: primary's published
+# localhost:55421 TCP mapping must remain reachable by the real JDBC client.
+# Established walsender connection is separately terminated below.
+docker network disconnect -f "$network" "$standby"
 # A Docker interface disconnect does not necessarily immediately close an
 # established PostgreSQL walsender TCP session. Force the disposable sender
 # closed, and require pg_stat_replication to lose its streaming peer BEFORE
@@ -170,6 +173,9 @@ test "$(standby_sql "SELECT count(*) FROM inventory_listings WHERE listing_id=0 
 # present on standby. Do not reconnect replication or claim zero RPO.
 docker kill -s KILL "$primary" >/dev/null
 test "$(docker inspect -f '{{.State.Running}}' "$primary")" = false
+# Restore the promoted standby's published localhost:55422 endpoint only
+# AFTER fencing the former primary, so a new JDBC client can reconcile.
+docker network connect "$network" "$standby"
 promoted=$(standby_sql "SELECT pg_promote(true,30)")
 test "$promoted" = t
 test "$(standby_sql "SELECT pg_is_in_recovery()")" = f
