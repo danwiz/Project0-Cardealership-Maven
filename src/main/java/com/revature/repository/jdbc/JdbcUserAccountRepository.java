@@ -14,9 +14,11 @@ import java.util.UUID;
 import com.revature.cardealer.AccountRole;
 import com.revature.cardealer.User;
 import com.revature.service.UserAccountRepository;
+import com.revature.service.AuthorizedAdminAccountWriter;
+import com.revature.service.Pbkdf2PasswordHasher;
 
 /** JDBC-backed account repository using the migrated accounts table. */
-public final class JdbcUserAccountRepository implements UserAccountRepository {
+public final class JdbcUserAccountRepository implements UserAccountRepository, AuthorizedAdminAccountWriter {
     private final JdbcDatabase database;
 
     public JdbcUserAccountRepository(JdbcDatabase database) {
@@ -168,6 +170,115 @@ public final class JdbcUserAccountRepository implements UserAccountRepository {
             }
         }
         return administrators;
+    }
+
+
+    /**
+     * Lock and revalidate the authenticated actor INSIDE the same transaction
+     * as the privileged account mutation. Generic repository methods cannot
+     * serve as a substitute: they do not carry verified actor authority.
+     */
+    private void assertCurrentAdministrator(Connection connection, User actor, String plaintext)
+            throws SQLException {
+        if (actor == null || plaintext == null
+                || actor.getRole() != AccountRole.ADMINISTRATOR
+                || actor.getSessionRevision() == null) {
+            throw new SecurityException("current administrator credentials required");
+        }
+        String sql = "SELECT username, encoded_credential, role, session_revision "
+                + "FROM accounts WHERE username = ? FOR UPDATE";
+        try (PreparedStatement query = connection.prepareStatement(sql)) {
+            query.setString(1, actor.getUsername());
+            try (ResultSet rows = query.executeQuery()) {
+                if (!rows.next()) throw new SecurityException("administrator account missing");
+                User current = map(rows);
+                if (current.getRole() != AccountRole.ADMINISTRATOR
+                        || !Objects.equals(current.getSessionRevision(), actor.getSessionRevision())
+                        || !Objects.equals(current.getPassword(), actor.getPassword())
+                        || !new Pbkdf2PasswordHasher().matches(plaintext, current.getPassword())) {
+                    throw new SecurityException("administrator was revoked or credentials changed");
+                }
+            }
+        }
+    }
+
+    @Override
+    public User provisionAuthorized(User actor, String plaintext, User newUser) {
+        validate(newUser);
+        if (!newUser.getPassword().startsWith("pbkdf2$")) {
+            throw new SecurityException("encoded credential required for provisioning");
+        }
+        return inGuardedAccountTransaction(connection -> {
+            assertCurrentAdministrator(connection, actor, plaintext);
+            String sql = "INSERT INTO accounts (username, encoded_credential, role) VALUES (?, ?, ?)";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, newUser.getUsername());
+                statement.setString(2, newUser.getPassword());
+                statement.setString(3, newUser.getRole().name());
+                statement.executeUpdate();
+                User inserted = copy(newUser);
+                inserted.setSessionRevision(null);
+                return inserted;
+            } catch (SQLException failure) {
+                if ("23505".equals(failure.getSQLState())) {
+                    throw new IllegalArgumentException("username is already registered", failure);
+                }
+                throw failure;
+            }
+        });
+    }
+
+    @Override
+    public boolean changeRoleAuthorized(User actor, String plaintext, String username,
+            AccountRole expectedRole, AccountRole replacementRole) {
+        requireText(username, "target username");
+        Objects.requireNonNull(expectedRole, "expectedRole");
+        Objects.requireNonNull(replacementRole, "replacementRole");
+        return inGuardedAccountTransaction(connection -> {
+            assertCurrentAdministrator(connection, actor, plaintext);
+            if (Objects.equals(actor.getUsername(), username)
+                    && replacementRole != AccountRole.ADMINISTRATOR) {
+                throw new SecurityException("cannot demote current administrator");
+            }
+            if (expectedRole == AccountRole.ADMINISTRATOR
+                    && replacementRole != AccountRole.ADMINISTRATOR) {
+                List<String> administrators = lockAdministratorAccounts(connection);
+                if (administrators.size() == 1 && administrators.contains(username)) {
+                    throw new SecurityException("cannot demote last administrator");
+                }
+            }
+            String sql = database.isH2()
+                    ? "UPDATE accounts SET role = ?, session_revision = ? WHERE username = ? AND role = ?"
+                    : "UPDATE accounts SET role = ? WHERE username = ? AND role = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, replacementRole.name());
+                int index = 2;
+                if (database.isH2()) statement.setObject(index++, UUID.randomUUID());
+                statement.setString(index++, username);
+                statement.setString(index, expectedRole.name());
+                return statement.executeUpdate() == 1;
+            }
+        });
+    }
+
+    @Override
+    public boolean removeAuthorized(User actor, String plaintext, String username) {
+        requireText(username, "target username");
+        return inGuardedAccountTransaction(connection -> {
+            assertCurrentAdministrator(connection, actor, plaintext);
+            if (Objects.equals(actor.getUsername(), username)) {
+                throw new SecurityException("cannot delete current administrator");
+            }
+            List<String> administrators = lockAdministratorAccounts(connection);
+            if (administrators.size() == 1 && administrators.contains(username)) {
+                throw new SecurityException("cannot delete last administrator");
+            }
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "DELETE FROM accounts WHERE username = ?")) {
+                statement.setString(1, username);
+                return statement.executeUpdate() > 0;
+            }
+        });
     }
 
     private <T> T inGuardedAccountTransaction(SqlWork<T> operation) {
