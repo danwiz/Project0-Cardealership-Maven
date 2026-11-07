@@ -1,0 +1,76 @@
+name: Wave20 Read-only OSV SCA Evidence
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave20-sca-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  osv-maven-sca:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact reviewed SHA with no persisted credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Validate exact source SHA
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Set up Java17 and Maven
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Recreate full test-inclusive CycloneDX BOM and dependency tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wave19-sbom wave20-sca
+          mvn --batch-mode --no-transfer-progress -DskipTests \
+            org.apache.maven.plugins:maven-dependency-plugin:3.11.0:tree \
+            -DoutputType=json -DoutputFile=wave19-sbom/dependency-tree.json
+          mvn --batch-mode --no-transfer-progress -DskipTests \
+            -DoutputFormat=all -DincludeTestScope=true -Dcyclonedx.skipAttach=true \
+            org.cyclonedx:cyclonedx-maven-plugin:2.9.3:makeAggregateBom
+      - name: Check full Maven and test-scope inventory
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python3 ci/wave19_verify_sbom.py
+      - name: Query OSV API for all Maven components
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python3 ci/wave20_osv_scan.py
+      - name: Preserve BOM, vulnerability query and error diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave20-osv-${{ github.event.pull_request.head.sha }}
+          path: |
+            wave19-sbom/
+            wave20-sca/
+            target/bom.json
+            target/bom.xml
+          if-no-files-found: warn
+          retention-days: 14
