@@ -91,7 +91,14 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
                     s.execute("CREATE TABLE "+schema+".w29_used_nonces("
                             +"nonce UUID PRIMARY KEY, key_id INTEGER NOT NULL, username TEXT NOT NULL,"
                             +"recorded_at TIMESTAMPTZ NOT NULL DEFAULT now())");
-                    keyRow(c,schema,1,key1,"VERIFY_ONLY",now-400,now+400,now-10);
+                    // Owner-only ledger for independent issuance receipts.
+                    // A leaked retired signing key cannot backdate an unregistered nonce.
+                    s.execute("CREATE TABLE "+schema+".w30_issued_intents("
+                            +"nonce UUID PRIMARY KEY, key_id INTEGER NOT NULL,"
+                            +"username TEXT NOT NULL, issued_epoch BIGINT NOT NULL,"
+                            +"signed_hmac TEXT NOT NULL,"
+                            +"registered_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp())");
+                    keyRow(c,schema,1,key1,"SIGNING_ACTIVE",now-400,now+400,null);
                     keyRow(c,schema,2,key2,"SIGNING_ACTIVE",now-400,now+400,null);
                     keyRow(c,schema,3,key3,"SIGNING_ACTIVE",now-400,now+400,null);
                     keyRow(c,schema,4,revokedKey,"REVOKED",now-400,now+400,null);
@@ -121,6 +128,7 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
             assertDenied42501(executeDb,"SELECT encoded_credential FROM accounts");
             assertDenied42501(executeDb,"SELECT key_bytes FROM w29_signing_keys");
             assertDenied42501(executeDb,"SELECT nonce FROM w29_used_nonces");
+            assertDenied42501(executeDb,"SELECT nonce FROM w30_issued_intents");
             assertDenied42501(executeDb,
                     "UPDATE accounts SET encoded_credential='forged' WHERE username='buyer'");
             assertDenied42501(executeDb,
@@ -150,13 +158,52 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
             assertFalse(call(executeDb,2,key2,buyer,newHash,UUID.randomUUID(),
                     now,now+45,"credential-service","admin-promotion"));
 
-            // A verify-only key accepts a genuinely pre-cutover intent during
-            // the 90-second window, but not a new one signed after cutoff.
-            assertFalse(call(executeDb,1,key1,buyer,newHash,UUID.randomUUID(),
-                    now,now+45,"credential-service","customer-password-rotation"));
+            // Wave30: register a real owner-held issuance receipt while key1
+            // is still SIGNING_ACTIVE, then retire the key. A compromised
+            // retired key alone cannot fabricate an earlier receipt by
+            // lying about issued_epoch inside a correctly signed HMAC.
             UUID preCutoverNonce=UUID.randomUUID();
+            long preIssued=Clock.systemUTC().instant().getEpochSecond();
+            long cutover=preIssued+4;
+            String preIntent=JdbcVersionedSignedCustomerCredentialWriter.canonical(
+                    1,buyer.getUsername(),UUID.fromString(buyer.getSessionRevision()),
+                    buyer.getPassword(),newHash,preCutoverNonce,preIssued,preIssued+90);
+            try(Connection c=server.openConnection()) {
+                try(PreparedStatement receipt=c.prepareStatement(
+                        "INSERT INTO "+schema+".w30_issued_intents"
+                        +"(nonce,key_id,username,issued_epoch,signed_hmac)"
+                        +" VALUES(?,?,?,?,?)")) {
+                    receipt.setObject(1,preCutoverNonce);
+                    receipt.setInt(2,1);
+                    receipt.setString(3,buyer.getUsername());
+                    receipt.setLong(4,preIssued);
+                    receipt.setString(5,mac(key1,preIntent));
+                    assertEquals(1,receipt.executeUpdate());
+                }
+                try(PreparedStatement rotate=c.prepareStatement(
+                        "UPDATE "+schema+".w29_signing_keys "
+                        +"SET state='VERIFY_ONLY', signing_disabled_epoch=? "
+                        +"WHERE key_id=1 AND state='SIGNING_ACTIVE'")) {
+                    rotate.setLong(1,cutover);
+                    assertEquals(1,rotate.executeUpdate());
+                }
+            }
+            // Wait until the cutover point, not just the state switch. The
+            // independently recorded receipt predates cutoff by design.
+            for(int attempts=0;attempts<40
+                    && Clock.systemUTC().instant().getEpochSecond()<cutover;attempts++) {
+                Thread.sleep(200);
+            }
+            assertTrue(Clock.systemUTC().instant().getEpochSecond()>=cutover);
+            long postIssued=Clock.systemUTC().instant().getEpochSecond();
+            assertFalse(call(executeDb,1,key1,buyer,newHash,UUID.randomUUID(),
+                    postIssued,postIssued+45,"credential-service","customer-password-rotation"));
+            // This malicious request is backdated and has a VALID old-key MAC,
+            // but lacks an independent pre-cutover issuance receipt.
+            assertFalse(call(executeDb,1,key1,buyer,newHash,UUID.randomUUID(),
+                    preIssued,preIssued+90,"credential-service","customer-password-rotation"));
             assertTrue(call(executeDb,1,key1,buyer,newHash,preCutoverNonce,
-                    now-30,now+45,"credential-service","customer-password-rotation"));
+                    preIssued,preIssued+90,"credential-service","customer-password-rotation"));
             User afterFirst=account(accounts);
             assertNotEquals(buyer.getSessionRevision(),afterFirst.getSessionRevision());
             assertTrue(passwordHasher.matches("customer-password-v2",afterFirst.getPassword()));
