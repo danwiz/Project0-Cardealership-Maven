@@ -94,7 +94,7 @@ class PostgresqlAccountPrivilegeBoundaryTest {
             actor.setPassword("root-password");
             actor.setRole(AccountRole.ADMINISTRATOR);
 
-            UserLoginService normalRuntime = new UserLoginService(readerAccounts, null);
+            UserLoginService normalRuntime = new UserLoginService(readerAccounts, (com.revature.service.UserAccountRepository) null);
             assertTrue(normalRuntime.authenticate(actor).isPresent(),
                     "limited SELECT access must allow credential verification");
             assertThrows(SecurityException.class,
