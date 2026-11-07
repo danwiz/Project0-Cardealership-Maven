@@ -142,6 +142,12 @@ printf '%s\n' "W28_SYNC_PHYSICAL_STANDBY_REMOTE_APPLY_CONFIRMED"
 # Losing a synchronous standby must not produce a successful COMMIT reply;
 # a real dealership approval transaction is launched on the old primary.
 docker network disconnect -f "$network" "$primary"
+# A Docker interface disconnect does not necessarily immediately close an
+# established PostgreSQL walsender TCP session. Force the disposable sender
+# closed, and require pg_stat_replication to lose its streaming peer BEFORE
+# any business COMMIT is attempted.
+primary_sql "SELECT pg_terminate_backend(pid) FROM pg_stat_replication" >/dev/null || true
+printf '%s\\n' "W28: replication sender termination requested after lab network isolation"
 test "$(docker inspect -f '{{.State.Running}}' "$primary")" = true
 test "$(primary_sql "SELECT pg_is_in_recovery()")" = f
 disconnected=0
