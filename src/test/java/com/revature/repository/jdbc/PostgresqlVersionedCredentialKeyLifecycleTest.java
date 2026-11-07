@@ -265,9 +265,19 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
         // Sign the correct canonical version. A wrong issuer/purpose is
         // independently rejected by DB even when signature is for the
         // legitimate domain. Signed alternatives must not be accepted.
-        String message=JdbcVersionedSignedCustomerCredentialWriter.canonical(
-                keyId,user.getUsername(),revision,user.getPassword(),
-                replacement,nonce,issued,expires);
+        // For NEGATIVE expiry/TTL tests, intentionally forge an otherwise
+        // valid HMAC around a time-invalid intent. The production Java signer
+        // correctly refuses to create these inputs; the test must bypass that
+        // client-side guard to exercise PostgreSQL's independent expiry check.
+        String message="W29v1|credential-service|customer-password-rotation|"
+                +keyId+"|"+user.getUsername()+"|"+revision+"|"
+                +user.getPassword()+"|"+replacement+"|"+nonce+"|"
+                +issued+"|"+expires;
+        if(keyId>=1 && expires>issued && expires-issued<=120) {
+            assertEquals(JdbcVersionedSignedCustomerCredentialWriter.canonical(
+                    keyId,user.getUsername(),revision,user.getPassword(),
+                    replacement,nonce,issued,expires),message);
+        }
         String signature=mac(signingKey,message);
         try(Connection c=db.openConnection();
                 PreparedStatement sql=c.prepareStatement(
