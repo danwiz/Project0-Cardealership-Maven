@@ -68,11 +68,18 @@ public class UserLoginService {
      */
     public User provisionUser(User operatorCredentials, String username,
             String password, AccountRole role) {
-        UserAccountRepository administrator = requireAdministrativeRepository();
+        AuthorizedAdminAccountWriter administrator = requireTrustedAdminWriter();
         User operator = authenticate(operatorCredentials)
                 .orElseThrow(() -> new SecurityException("administrator authentication required"));
         new RoleAuthorizationService().requireAuthorized(operator, Permission.MANAGE_USERS);
-        return registerWithRole(username, password, role, administrator);
+        validateCredential("username", username);
+        validateCredential("password", password);
+        Objects.requireNonNull(role, "role");
+        User requested = new User();
+        requested.setUsername(username);
+        requested.setPassword(passwordHasher.hash(password));
+        requested.setRole(role);
+        return administrator.provisionAuthorized(operator, operatorCredentials.getPassword(), requested);
     }
 
     /**
@@ -83,8 +90,15 @@ public class UserLoginService {
         validateCredential("replacementPassword", replacementPassword);
         User existing = authenticate(currentCredentials)
                 .orElseThrow(() -> new SecurityException("current account authentication required"));
+        String replacementEncoded = passwordHasher.hash(replacementPassword);
+        if (userRepository instanceof TrustedCustomerCredentialWriter) {
+            // The trusted writer independently revalidates the persisted customer,
+            // credential plaintext, and session generation while holding the row.
+            return ((TrustedCustomerCredentialWriter) userRepository).rotateCustomerPassword(
+                    existing, currentCredentials.getPassword(), replacementEncoded);
+        }
         return userRepository.updateCredentialIfCurrent(existing.getUsername(),
-                existing.getPassword(), passwordHasher.hash(replacementPassword));
+                existing.getPassword(), replacementEncoded);
     }
 
     /**
@@ -96,7 +110,7 @@ public class UserLoginService {
         validateCredential("targetUsername", targetUsername);
         Objects.requireNonNull(expectedRole, "expectedRole");
         Objects.requireNonNull(replacementRole, "replacementRole");
-        UserAccountRepository administratorWriter = requireAdministrativeRepository();
+        AuthorizedAdminAccountWriter administratorWriter = requireTrustedAdminWriter();
         User administrator = authenticate(administratorCredentials)
                 .orElseThrow(() -> new SecurityException("administrator authentication required"));
         new RoleAuthorizationService().requireAuthorized(administrator, Permission.MANAGE_USERS);
@@ -104,7 +118,8 @@ public class UserLoginService {
                 && replacementRole != AccountRole.ADMINISTRATOR) {
             throw new SecurityException("an administrator cannot demote their own account");
         }
-        return administratorWriter.updateRoleIfCurrent(targetUsername, expectedRole, replacementRole);
+        return administratorWriter.changeRoleAuthorized(administrator,
+                administratorCredentials.getPassword(), targetUsername, expectedRole, replacementRole);
     }
 
     private User registerWithRole(String username, String password, AccountRole role) {
@@ -127,23 +142,23 @@ public class UserLoginService {
         return writer.save(account);
     }
 
-    private UserAccountRepository requireAdministrativeRepository() {
-        if (administrativeRepository == null) {
-            throw new SecurityException("privileged account administration is not configured for this runtime");
+    private AuthorizedAdminAccountWriter requireTrustedAdminWriter() {
+        if (!(administrativeRepository instanceof AuthorizedAdminAccountWriter)) {
+            throw new SecurityException("trusted atomic administration capability is not configured");
         }
-        return administrativeRepository;
+        return (AuthorizedAdminAccountWriter) administrativeRepository;
     }
 
     public boolean removeUser(User operatorCredentials, String targetUsername) {
         validateCredential("targetUsername", targetUsername);
-        UserAccountRepository administratorWriter = requireAdministrativeRepository();
+        AuthorizedAdminAccountWriter administratorWriter = requireTrustedAdminWriter();
         User operator = authenticate(operatorCredentials)
                 .orElseThrow(() -> new SecurityException("administrator authentication required"));
         new RoleAuthorizationService().requireAuthorized(operator, Permission.MANAGE_USERS);
         if (Objects.equals(operator.getUsername(), targetUsername)) {
             throw new SecurityException("an administrator cannot delete their own account");
         }
-        return administratorWriter.removeByUsername(targetUsername);
+        return administratorWriter.removeAuthorized(operator, operatorCredentials.getPassword(), targetUsername);
     }
 
     /** The legacy unauthenticated deletion API fails closed. */
