@@ -1,0 +1,63 @@
+name: Wave16 Isolated Negative Regression Review
+
+# This diagnostic PR workflow has no secrets or write permissions.
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave16-negative-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  negative-regressions:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['11', '17']
+    steps:
+      - name: Checkout exact isolated PR head without persisted token
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Require exact head checkout
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          printf 'Candidate SHA: %s\n' "$EXPECTED_HEAD"
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Execute only Wave16 safety regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wave16-logs
+          mvn --batch-mode --no-transfer-progress \
+            -Dtest=ConcurrentAdministratorRevocationRegressionTest,AtomicSnapshotReplacementRegressionTest \
+            test 2>&1 | tee wave16-logs/negative-java-${{ matrix.java }}.log
+      - name: Preserve negative-regression evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave16-negative-java-${{ matrix.java }}
+          path: |
+            target/surefire-reports/
+            wave16-logs/
+          if-no-files-found: warn
+          retention-days: 14
