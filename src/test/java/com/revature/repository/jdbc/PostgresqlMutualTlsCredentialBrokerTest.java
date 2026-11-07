@@ -180,8 +180,10 @@ class PostgresqlMutualTlsCredentialBrokerTest {
                         noCert,port,"CHANGE\tmtls-buyer\tsynthetic-old-password\tno-cert-password");
                 assertFalse("OK".equals(untrustedResponse),
                         "unauthenticated client must never change credential");
-            } catch (javax.net.ssl.SSLException deniedAtHandshake) {
-                // Correct denial: mTLS failed before reaching the broker.
+            } catch (java.io.IOException deniedAtHandshakeOrSocket) {
+                // Java can report a rejected no-cert peer as SSLException,
+                // connection reset, or broken pipe; each is a transport denial.
+                // The unchanged persisted hash assertion below is mandatory.
             }
             assertEquals(before.getPassword(),
                     ownerAccounts.findByUsername("mtls-buyer")
