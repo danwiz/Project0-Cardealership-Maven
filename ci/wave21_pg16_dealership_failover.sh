@@ -176,7 +176,7 @@ data={
         "Production credentials and HA failover management"
     ]
 }
-path=pathlib.Path("wave20-ha/physical_recovery_evidence.json")
+path=pathlib.Path("wave21-ha/physical_recovery_evidence.json")
 path.write_text(json.dumps(data,indent=2)+"\n",encoding="utf-8")
 print(json.dumps(data,indent=2))
 PY
