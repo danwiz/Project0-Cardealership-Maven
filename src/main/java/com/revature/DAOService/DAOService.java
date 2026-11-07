@@ -2,12 +2,10 @@ package com.revature.DAOService;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.InvalidClassException;
-import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,9 +50,8 @@ public class DAOService implements DataDAO {
         if (Files.isSymbolicLink(Paths.get(filename))) {
             return SaveResult.invalidInput("symbolic-link snapshot targets are not accepted");
         }
-        try (FileOutputStream output = new FileOutputStream(filename);
-                ObjectOutputStream objectOutput = new ObjectOutputStream(output)) {
-            objectOutput.writeObject(data.getSnapshot());
+        try {
+            AtomicSnapshotFileWriter.writeAtomically(Paths.get(filename), data.getSnapshot());
             return SaveResult.success(filename);
         } catch (IOException | RuntimeException exception) {
             return SaveResult.failure(SaveResult.Status.IO_ERROR, filename,
