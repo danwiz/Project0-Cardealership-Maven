@@ -1,0 +1,57 @@
+name: Wave23 Actual Dealership COMMIT ACK-loss and PG16 Promotion
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave23-ack-loss-ha-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  commit-uncertainty-reconciliation:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - name: Checkout exact PR head without persistent credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Set up Java17 and Maven
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Validate exact source and disposable Docker lab
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          docker info >/dev/null
+          bash -n ci/wave23_pg16_commit_loss_failover.sh
+      - name: Run real client ACK-loss and promoted-standby readback
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p wave23-ha
+          bash ci/wave23_pg16_commit_loss_failover.sh 2>&1 | tee wave23-ha/run.log
+      - name: Preserve exact-sha machine-readable proof and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave23-commit-loss-ha-${{ github.event.pull_request.head.sha }}
+          path: wave23-ha/
+          if-no-files-found: warn
+          retention-days: 14
