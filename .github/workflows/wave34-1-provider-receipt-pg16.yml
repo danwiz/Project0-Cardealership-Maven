@@ -1,0 +1,89 @@
+name: Wave34.1 Provider Receipt Identity PG16 Acceptance
+
+on:
+  pull_request:
+    branches:
+      - audit/wave33-provider-signed-receipts-concurrency-20261107
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave34-1-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  provider-identity-acceptance:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['11', '17']
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dealership_ci_owner
+          POSTGRES_PASSWORD: ci-only-postgres-fixture
+          POSTGRES_DB: dealership_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dealership_ci_owner -d dealership_ci"
+          --health-interval 10s --health-timeout 5s --health-retries 8
+    env:
+      CI: 'true'
+      W34_DISPOSABLE_ONLY: 'true'
+      DEALERSHIP_PG_TEST_URL: jdbc:postgresql://localhost:5432/dealership_ci
+      DEALERSHIP_PG_TEST_USER: dealership_ci_owner
+      DEALERSHIP_PG_TEST_PASSWORD: ci-only-postgres-fixture
+    steps:
+      - name: Checkout immutable PR head, without persisted credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Validate immutable SHA
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Java toolchain
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Run four identity regressions and one REAL PG16 uniqueness regression
+        run: mvn -B -Dtest=ProviderPaymentIdentityTest,Wave34PostgresqlReceiptUniquenessTest test
+      - name: Require all five named non-skipped JUnit results
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          folder=Path('target/surefire-reports')
+          files=[
+            folder/'TEST-com.revature.application.ProviderPaymentIdentityTest.xml',
+            folder/'TEST-com.revature.repository.jdbc.Wave34PostgresqlReceiptUniquenessTest.xml'
+          ]
+          expected=[4,1]
+          for file,minimum in zip(files,expected):
+            if not file.is_file(): raise SystemExit('NO-GO: missing '+str(file))
+            cases=list(ET.parse(file).getroot().iter('testcase'))
+            if len(cases)!=minimum or any(any(c.find(x) is not None for x in ('failure','error','skipped')) for c in cases):
+                raise SystemExit('NO-GO: missing/skipped/failed identity or PG16 test: '+str(file))
+          print('W34.1: five actual tests PASS including PG16, identity-only; NOT payment release readiness')
+          PY
+      - name: Preserve exact-SHA test evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave34-1-jdk${{ matrix.java }}-${{ github.event.pull_request.head.sha }}
+          path: target/surefire-reports/
+          if-no-files-found: warn
+          retention-days: 14
