@@ -1,0 +1,57 @@
+name: Wave26 Disposable PG16 Former-Primary Rebuild and Read-Only Rejoin
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave26-pg16-rejoin-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  fenced-rebuild:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact PR commit without stored credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Set up Java17 and Maven
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Validate exact SHA, Docker and lab script
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          docker info >/dev/null
+          bash -n ci/wave26_pg16_fenced_rebuild_rejoin_lab.sh
+      - name: Fence old primary, promote, quarantine, reinitialize and join read-only
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p wave26-rejoin
+          bash ci/wave26_pg16_fenced_rebuild_rejoin_lab.sh 2>&1 | tee wave26-rejoin/run.log
+      - name: Preserve exact-SHA rejoin proof and diagnostic trace
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave26-pg16-rejoin-${{ github.event.pull_request.head.sha }}
+          path: wave26-rejoin/
+          if-no-files-found: warn
+          retention-days: 14

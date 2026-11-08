@@ -1,0 +1,57 @@
+name: Wave27 In-Flight Dealership COMMIT at PG16 Physical Promotion
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave27-inflight-commit-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  pending-commit-cutover:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact review SHA with no persisted credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Configure Java 17 and Maven
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Verify immutable exact-head and disposable Docker guard
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          docker info >/dev/null
+          bash -n ci/wave27_pg16_inflight_commit_promotion_lab.sh
+      - name: Hold real COMMIT frame, fence old primary, promote, reconcile idempotently
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p wave27-race
+          bash ci/wave27_pg16_inflight_commit_promotion_lab.sh 2>&1 | tee wave27-race/run.log
+      - name: Preserve machine-readable exact-SHA failover evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave27-inflight-commit-${{ github.event.pull_request.head.sha }}
+          path: wave27-race/
+          if-no-files-found: warn
+          retention-days: 14

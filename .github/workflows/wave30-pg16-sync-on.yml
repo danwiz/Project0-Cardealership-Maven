@@ -1,0 +1,57 @@
+name: Wave30 Disposable PG16 Synchronous ON Remote WAL Flush
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave30-sync-on-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  synchronous-on:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact candidate SHA without stored credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Install Java17 and Maven
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Validate exact Git SHA and lab scope
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          docker info >/dev/null
+          bash -n ci/wave30_pg16_sync_on_remote_flush_lab.sh
+      - name: Prove actual dealership COMMIT waits for lost remote_write standby
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p wave30-flush
+          bash ci/wave30_pg16_sync_on_remote_flush_lab.sh 2>&1 | tee wave30-flush/run.log
+      - name: Preserve exact-SHA WAL and business recovery proof
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave29-pg16-synchronous-on-${{ github.event.pull_request.head.sha }}
+          path: wave30-flush/
+          if-no-files-found: warn
+          retention-days: 14

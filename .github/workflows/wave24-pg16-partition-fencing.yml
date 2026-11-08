@@ -1,0 +1,57 @@
+name: Wave24 Disposable PG16 Network Partition and Pre-Promotion Fence
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave24-pg16-fence-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  partition-fence:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact immutable PR head
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Set up Java17 for actual dealership schema fixture
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Validate exact SHA, Docker scope and script syntax
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          docker info >/dev/null
+          bash -n ci/wave24_pg16_partition_fencing_lab.sh
+      - name: Partition live primary, prove risk, fence and promote standby
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p wave24-fence
+          bash ci/wave24_pg16_partition_fencing_lab.sh 2>&1 | tee wave24-fence/run.log
+      - name: Preserve exact SHA recovery/fencing proof
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave24-pg16-fencing-${{ github.event.pull_request.head.sha }}
+          path: wave24-fence/
+          if-no-files-found: warn
+          retention-days: 14

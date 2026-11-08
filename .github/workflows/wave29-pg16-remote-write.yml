@@ -1,0 +1,57 @@
+name: Wave29 Disposable PG16 Synchronous Remote-Write Commit Policy
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave29-remote-write-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  remote-write:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact candidate SHA without stored credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Install Java17 and Maven
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Validate exact Git SHA and lab scope
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          docker info >/dev/null
+          bash -n ci/wave29_pg16_sync_remote_write_lab.sh
+      - name: Prove actual dealership COMMIT waits for lost remote_write standby
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p wave29-write
+          bash ci/wave29_pg16_sync_remote_write_lab.sh 2>&1 | tee wave29-write/run.log
+      - name: Preserve exact-SHA WAL and business recovery proof
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave29-pg16-remote-write-${{ github.event.pull_request.head.sha }}
+          path: wave29-write/
+          if-no-files-found: warn
+          retention-days: 14
