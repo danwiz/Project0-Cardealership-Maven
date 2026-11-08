@@ -50,9 +50,10 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
                 && "ci-only-postgres-fixture".equals(ownerPassword),
                 "only isolated PostgreSQL16 GitHub Actions test fixture");
         String suffix=UUID.randomUUID().toString().replace("-","");
-        String schema="w29_"+suffix, verifier="w29read_"+suffix, writer="w29exec_"+suffix;
+        String schema="w29_"+suffix, verifier="w29read_"+suffix, writer="w29exec_"+suffix, issuer="w31issue_"+suffix;
         String readPassword="ci-only-private-verifier";
         String execPassword="ci-only-versioned-intent-executor";
+        String issuePassword="ci-only-independent-issuer";
         byte[] key1=key(),key2=key(),key3=key(),revokedKey=key();
         long now=Clock.systemUTC().instant().getEpochSecond();
         JdbcDatabase server=new JdbcDatabase(url,ownerName,ownerPassword);
@@ -68,6 +69,7 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
                 s.execute("CREATE SCHEMA "+schema);
                 s.execute("CREATE ROLE "+verifier+" LOGIN PASSWORD '"+readPassword+"'");
                 s.execute("CREATE ROLE "+writer+" LOGIN PASSWORD '"+execPassword+"'");
+                s.execute("CREATE ROLE "+issuer+" LOGIN PASSWORD '" +issuePassword+"'");
                 rolesCreated=true;
             }
             String scoped=url+"?currentSchema="+schema;
@@ -105,10 +107,14 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
 
                     s.execute(resource("/postgresql/wave29_versioned_credential_intent_ci.sql")
                             .replace("__SCHEMA__",schema));
+                    s.execute(resource("/postgresql/wave31_authenticated_issuance_ci.sql")
+                            .replace("__SCHEMA__",schema));
                     s.execute("REVOKE ALL ON SCHEMA "+schema+" FROM PUBLIC");
+                    s.execute("REVOKE ALL ON FUNCTION "+schema+".register_credential_issuance_v31("
+                            +"text,text,integer,text,uuid,text,text,uuid,bigint,bigint,text) FROM PUBLIC");
                     s.execute("REVOKE ALL ON FUNCTION "+schema+".rotate_customer_credential_v29("
                             +"text,text,integer,text,uuid,text,text,uuid,bigint,bigint,text) FROM PUBLIC");
-                    for(String role:new String[]{verifier,writer}) {
+                    for(String role:new String[]{verifier,writer,issuer}) {
                         s.execute("GRANT USAGE ON SCHEMA "+schema+" TO "+role);
                         s.execute("GRANT SELECT ON "+schema+".schema_history TO "+role);
                     }
@@ -116,6 +122,8 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
                             +"ON "+schema+".accounts TO "+verifier);
                     s.execute("GRANT EXECUTE ON FUNCTION "+schema+".rotate_customer_credential_v29("
                             +"text,text,integer,text,uuid,text,text,uuid,bigint,bigint,text) TO "+writer);
+                    s.execute("GRANT EXECUTE ON FUNCTION "+schema+".register_credential_issuance_v31("
+                            +"text,text,integer,text,uuid,text,text,uuid,bigint,bigint,text) TO "+issuer);
                     c.commit();
                 } catch(SQLException | RuntimeException e) {
                     c.rollback();
@@ -125,14 +133,30 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
 
             JdbcDatabase readDb=new JdbcDatabase(scoped,verifier,readPassword);
             JdbcDatabase executeDb=new JdbcDatabase(scoped,writer,execPassword);
+            JdbcDatabase issuerDb=new JdbcDatabase(scoped,issuer,issuePassword);
             assertDenied42501(executeDb,"SELECT encoded_credential FROM accounts");
             assertDenied42501(executeDb,"SELECT key_bytes FROM w29_signing_keys");
             assertDenied42501(executeDb,"SELECT nonce FROM w29_used_nonces");
             assertDenied42501(executeDb,"SELECT nonce FROM w30_issued_intents");
+            assertDenied42501(issuerDb,"SELECT nonce FROM w30_issued_intents");
+            assertDenied42501(issuerDb,"SELECT key_bytes FROM w29_signing_keys");
+            assertDenied42501(issuerDb,"SELECT encoded_credential FROM accounts");
             assertDenied42501(executeDb,
                     "INSERT INTO w30_issued_intents"
                     +"(nonce,key_id,username,issued_epoch,signed_hmac)"
                     +" VALUES(gen_random_uuid(),1,'buyer',0,'forged')");
+            assertDenied42501(executeDb,
+                    "SELECT register_credential_issuance_v31("
+                    +"'credential-service','customer-password-rotation',1,'buyer',"
+                    +"NULL::uuid,NULL::text,NULL::text,NULL::uuid,0,0,'forged')");
+            assertDenied42501(issuerDb,
+                    "UPDATE w30_issued_intents SET username='root' WHERE FALSE");
+            assertDenied42501(issuerDb,
+                    "DELETE FROM w30_issued_intents WHERE FALSE");
+            assertDenied42501(issuerDb,
+                    "SELECT rotate_customer_credential_v29("
+                    +"'credential-service','customer-password-rotation',1,'buyer',"
+                    +"NULL::uuid,NULL::text,NULL::text,NULL::uuid,0,0,'forged')");
             assertDenied42501(executeDb,
                     "UPDATE accounts SET encoded_credential='forged' WHERE username='buyer'");
             assertDenied42501(executeDb,
@@ -172,25 +196,22 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
             String preIntent=JdbcVersionedSignedCustomerCredentialWriter.canonical(
                     1,buyer.getUsername(),UUID.fromString(buyer.getSessionRevision()),
                     buyer.getPassword(),newHash,preCutoverNonce,preIssued,preIssued+90);
-            try(Connection c=server.openConnection()) {
-                try(PreparedStatement receipt=c.prepareStatement(
-                        "INSERT INTO "+schema+".w30_issued_intents"
-                        +"(nonce,key_id,username,issued_epoch,signed_hmac)"
-                        +" VALUES(?,?,?,?,?)")) {
-                    receipt.setObject(1,preCutoverNonce);
-                    receipt.setInt(2,1);
-                    receipt.setString(3,buyer.getUsername());
-                    receipt.setLong(4,preIssued);
-                    receipt.setString(5,mac(key1,preIntent));
-                    assertEquals(1,receipt.executeUpdate());
-                }
-                try(PreparedStatement rotate=c.prepareStatement(
+            String preMac=mac(key1,preIntent);
+            // A distinct issuer DB login may only EXECUTE this owner function.
+            // It cannot read the key or account and cannot insert receipts.
+            assertTrue(registerIssue(issuerDb,1,buyer,newHash,preCutoverNonce,
+                    preIssued,preIssued+90,preMac));
+            assertFalse(registerIssue(issuerDb,1,buyer,newHash,preCutoverNonce,
+                    preIssued,preIssued+90,preMac),"duplicate receipt must fail");
+            assertFalse(registerIssue(issuerDb,1,buyer,newHash,UUID.randomUUID(),
+                    preIssued,preIssued+90,preMac),"mismatched nonce/HMAC must fail");
+            try(Connection c=server.openConnection();
+                    PreparedStatement rotate=c.prepareStatement(
                         "UPDATE "+schema+".w29_signing_keys "
                         +"SET state='VERIFY_ONLY', signing_disabled_epoch=? "
                         +"WHERE key_id=1 AND state='SIGNING_ACTIVE'")) {
-                    rotate.setLong(1,cutover);
-                    assertEquals(1,rotate.executeUpdate());
-                }
+                rotate.setLong(1,cutover);
+                assertEquals(1,rotate.executeUpdate());
             }
             // Wait until the cutover point, not just the state switch. The
             // independently recorded receipt predates cutoff by design.
@@ -206,6 +227,13 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
             // but lacks an independent pre-cutover issuance receipt.
             assertFalse(call(executeDb,1,key1,buyer,newHash,UUID.randomUUID(),
                     preIssued,preIssued+90,"credential-service","customer-password-rotation"));
+            UUID lateNonce=UUID.randomUUID();
+            String lateCanonical=JdbcVersionedSignedCustomerCredentialWriter.canonical(
+                    1,buyer.getUsername(),UUID.fromString(buyer.getSessionRevision()),
+                    buyer.getPassword(),newHash,lateNonce,preIssued,preIssued+90);
+            assertFalse(registerIssue(issuerDb,1,buyer,newHash,lateNonce,
+                    preIssued,preIssued+90,mac(key1,lateCanonical)),
+                    "issuer cannot register a backdated request after key cutoff");
             assertTrue(call(executeDb,1,key1,buyer,newHash,preCutoverNonce,
                     preIssued,preIssued+90,"credential-service","customer-password-rotation"));
             User afterFirst=account(accounts);
@@ -272,6 +300,7 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
                 if(rolesCreated) {
                     s.execute("DROP ROLE IF EXISTS "+verifier);
                     s.execute("DROP ROLE IF EXISTS "+writer);
+                    s.execute("DROP ROLE IF EXISTS "+issuer);
                 }
             }
             java.util.Arrays.fill(key1,(byte)0);
@@ -349,6 +378,32 @@ class PostgresqlVersionedCredentialKeyLifecycleTest {
                 boolean value=results.getBoolean(1);
                 assertFalse(results.next());
                 return value;
+            }
+        }
+    }
+
+    private static boolean registerIssue(JdbcDatabase issuerDb,int keyId,User snapshot,
+            String replacement,UUID nonce,long issued,long expires,String signature)
+            throws SQLException {
+        try(Connection c=issuerDb.openConnection();
+                PreparedStatement stmt=c.prepareStatement(
+                    "SELECT register_credential_issuance_v31(?,?,?,?,?,?,?,?,?,?,?)")) {
+            stmt.setString(1,"credential-service");
+            stmt.setString(2,"customer-password-rotation");
+            stmt.setInt(3,keyId);
+            stmt.setString(4,snapshot.getUsername());
+            stmt.setObject(5,UUID.fromString(snapshot.getSessionRevision()));
+            stmt.setString(6,snapshot.getPassword());
+            stmt.setString(7,replacement);
+            stmt.setObject(8,nonce);
+            stmt.setLong(9,issued);
+            stmt.setLong(10,expires);
+            stmt.setString(11,signature);
+            try(ResultSet result=stmt.executeQuery()) {
+                assertTrue(result.next());
+                boolean success=result.getBoolean(1);
+                assertFalse(result.next());
+                return success;
             }
         }
     }
