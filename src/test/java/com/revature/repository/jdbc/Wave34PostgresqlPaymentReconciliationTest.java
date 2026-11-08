@@ -152,10 +152,9 @@ class Wave34PostgresqlPaymentReconciliationTest {
             // A different provider request may NOT reuse a provider transaction.
             ProviderPaymentIdentity txCollision = signed(f.ownership, "req-c", "txn-b",
                     "buyer", 1250, "USD", false);
-            IllegalStateException collision = assertThrows(IllegalStateException.class,
-                    () -> f.reconciler.reconcile(txCollision));
-            assertTrue(collision.getCause() instanceof SQLException);
-            assertEquals("23505", ((SQLException) collision.getCause()).getSQLState());
+            assertThrows(SecurityException.class,
+                    () -> f.reconciler.reconcile(txCollision),
+                    "a reused provider transaction is an immutable-identity conflict");
             f.assertState(2, 2500, 21500);
 
             assertTrue(f.reconciler.reconcile(first).isReplay());
