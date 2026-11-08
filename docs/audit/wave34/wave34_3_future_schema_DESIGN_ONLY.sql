@@ -1,0 +1,46 @@
+-- W34.3 FOR DESIGN REVIEW ONLY — NOT AN APPROVED MIGRATION.
+-- DO NOT RUN against live, staging or customer databases.
+-- Owner/DBA/payments/legal must approve unit/currency, retention, grants,
+-- transaction journal, migration version, rollback and source rights.
+-- This illustrates separation of future immutable ledger/outbox models.
+-- It is deliberately NOT imported by JdbcDatabase.migrate() or CI.
+--
+-- EXAMPLE ONLY, may not be internally complete:
+-- CREATE SEQUENCE ... (choose numeric/UUID strategy after ID impact review)
+-- CREATE TABLE provider_event_inbox (
+--   provider_namespace VARCHAR(40) NOT NULL,
+--   provider_event_id VARCHAR(100) NOT NULL,
+--   provider_request_id VARCHAR(100) NOT NULL,
+--   authenticated_digest CHAR(64) NOT NULL,
+--   provider_event_kind VARCHAR(40) NOT NULL,
+--   actor_claim_ref VARCHAR(100),
+--   received_at TIMESTAMPTZ NOT NULL,
+--   PRIMARY KEY (provider_namespace, provider_event_id)
+-- );
+-- CREATE TABLE ledger_entries (
+--   ledger_entry_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--   legacy_payment_id VARCHAR(40),
+--   ownership_id BIGINT NOT NULL REFERENCES owned_vehicles(ownership_id),
+--   source_provider VARCHAR(40) NOT NULL,
+--   source_event_id VARCHAR(100) NOT NULL,
+--   amount_minor_units BIGINT NOT NULL,
+--   currency_code CHAR(3) NOT NULL,
+--   direction VARCHAR(10) NOT NULL,
+--   recorded_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+--   UNIQUE (source_provider, source_event_id),
+--   CHECK (amount_minor_units > 0),
+--   CHECK (direction IN ('DEBIT','CREDIT'))
+-- );
+-- CREATE TABLE ledger_outbox (
+--   event_id UUID PRIMARY KEY,
+--   source_ledger_entry_id BIGINT NOT NULL REFERENCES ledger_entries(ledger_entry_id),
+--   event_kind VARCHAR(50) NOT NULL,
+--   payload_digest CHAR(64) NOT NULL,
+--   created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+--   published_at TIMESTAMPTZ,
+--   delivery_attempts INTEGER NOT NULL DEFAULT 0
+-- );
+--
+-- CRITICAL: the above sketch does not model balance projections, unit
+-- conversion, all refund/chargeback disputes, roles/retention, true double
+-- entry, partitioning, key provenance, or legal audit policy. DO NOT EXECUTE.
