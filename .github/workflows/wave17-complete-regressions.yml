@@ -1,4 +1,4 @@
-name: Wave32 External Payment Reconciliation Audit and Full PG16 Regression
+name: Wave33 Signed Payment Receipt Concurrency and PG16 Full Regression
 
 on:
   pull_request:
@@ -81,10 +81,10 @@ jobs:
           set -euo pipefail
           mkdir -p wave17-logs
           mvn --batch-mode --no-transfer-progress clean verify 2>&1 | tee wave17-logs/full-${{ matrix.java }}.log
-      - name: Check updated 375-case and 105-class full roster
+      - name: Check updated 376-case and 106-class full roster
         shell: bash
         run: |
-          python3 ci/stage28_check_surefire.py full 375 105 target/surefire-reports wave17-evidence/full-${{ matrix.java }}.json
+          python3 ci/stage28_check_surefire.py full 376 106 target/surefire-reports wave17-evidence/full-${{ matrix.java }}.json
       - name: Assert three actual PostgreSQL16 actor-revocation interleavings passed
         shell: bash
         run: |
@@ -145,6 +145,11 @@ jobs:
         run: |
           set -euo pipefail
           python3 ci/wave32_check_unkeyed_payment.py wave17-evidence/wave32-payment-${{ matrix.java }}.json
+      - name: Require signed provider receipt negative-case JUnit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave33_check_provider_signature.py wave17-evidence/wave33-provider-${{ matrix.java }}.json
       - name: Preserve full JUnit reports
         if: always()
         uses: actions/upload-artifact@v6
@@ -162,7 +167,7 @@ jobs:
           set -euo pipefail
           rm -rf target/surefire-reports
           mvn --batch-mode --no-transfer-progress '-Dgroups=SECURITY | security' test
-          python3 ci/stage28_check_surefire.py security 146 61 target/surefire-reports wave17-evidence/security-${{ matrix.java }}.json
+          python3 ci/stage28_check_surefire.py security 147 62 target/surefire-reports wave17-evidence/security-${{ matrix.java }}.json
       - name: Preserve security JUnit reports
         if: always()
         uses: actions/upload-artifact@v6
