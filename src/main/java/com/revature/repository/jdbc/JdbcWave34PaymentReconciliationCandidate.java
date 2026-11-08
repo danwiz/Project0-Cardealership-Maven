@@ -121,7 +121,7 @@ public final class JdbcWave34PaymentReconciliationCandidate {
                 + "(provider_code,provider_request_id,provider_transaction_id,"
                 + "customer_name,ownership_id,contract_id,amount,currency_code,"
                 + "verified_receipt_digest,signing_key_id) VALUES (?,?,?,?,?,?,?,?,?,?) "
-                + "ON CONFLICT (provider_code,provider_request_id) DO NOTHING")) {
+                + "ON CONFLICT DO NOTHING")) {
             insert.setString(1, receipt.getProvider());
             insert.setString(2, receipt.getRequestId());
             insert.setString(3, receipt.getTransactionId());
@@ -147,7 +147,7 @@ public final class JdbcWave34PaymentReconciliationCandidate {
                             || !receipt.getTransactionId().equals(row.getString(1))
                             || !receipt.getDigest().equals(row.getString(2))
                             || row.getString(3) == null || row.getTimestamp(4) == null) {
-                        throw new SecurityException("conflicting or incomplete provider replay");
+                        throw new SecurityException("provider request or transaction reused with conflicting/incomplete receipt");
                     }
                     String localId = row.getString(3);
                     if (row.next()) throw new SecurityException("multiple receipt bindings");
