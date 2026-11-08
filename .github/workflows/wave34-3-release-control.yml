@@ -1,0 +1,162 @@
+name: Wave34.3 Architecture Custody and Full PG16 Regression
+
+on:
+  pull_request:
+    branches:
+      - audit/wave34-2-atomic-payment-candidate-20261108
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave34-3-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  architecture-custody:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      EXPECTED_PARENT: c369e22a5dd87831286bf821bf7f59e30a9a7311
+    steps:
+      - name: Checkout immutable PR head and parent history
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Enforce exact source custody and proposed-only status
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          python3 ci/wave34_3_release_control_gate.py static
+      - name: Preserve non-release architecture evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave34-3-architecture-${{ github.event.pull_request.head.sha }}
+          path: wave34-3-evidence/
+          if-no-files-found: warn
+          retention-days: 14
+
+  full-source-regression:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    needs: architecture-custody
+    name: JDK ${{ matrix.java }} PG16 complete + SECURITY
+    runs-on: ubuntu-latest
+    timeout-minutes: 38
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['11', '17']
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dealership_ci_owner
+          POSTGRES_PASSWORD: ci-only-postgres-fixture
+          POSTGRES_DB: dealership_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dealership_ci_owner -d dealership_ci"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+    env:
+      CI: 'true'
+      W34_DISPOSABLE_ONLY: 'true'
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      DEALERSHIP_PG_TEST_URL: jdbc:postgresql://localhost:5432/dealership_ci
+      DEALERSHIP_PG_TEST_USER: dealership_ci_owner
+      DEALERSHIP_PG_TEST_PASSWORD: ci-only-postgres-fixture
+    steps:
+      - name: Checkout exact PR source
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Verify exact SHA and no persistent GitHub credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Install Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Prepare disposable PG16 logical decoding for inherited legacy tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          pg_container='${{ job.services.postgres.id }}'
+          docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -v ON_ERROR_STOP=1 -c "ALTER SYSTEM SET wal_level = 'logical'"
+          docker restart "$pg_container"
+          for attempt in {1..30}; do
+            docker exec "$pg_container" pg_isready -U dealership_ci_owner -d dealership_ci >/dev/null 2>&1 && break
+            sleep 1
+          done
+          actual=$(docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -At -c "SHOW wal_level")
+          test "$actual" = 'logical'
+      - name: Complete actual Maven verify with real disposable PostgreSQL16
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wave34-3-evidence
+          mvn --batch-mode --no-transfer-progress clean verify 2>&1 | tee wave34-3-evidence/full-${{ matrix.java }}.log
+      - name: Verify 384 method / 109 class complete roster
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/stage28_check_surefire.py full 384 109 target/surefire-reports wave34-3-evidence/full-roster-${{ matrix.java }}.json
+          python3 ci/wave34_3_release_control_gate.py full
+      - name: Preserve inherited PG16/source security checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave18_check_pg_admin.py wave34-3-evidence/wave18-admin-${{ matrix.java }}.json
+          python3 ci/wave19_check_pg_contention.py wave34-3-evidence/wave19-contention-${{ matrix.java }}.json
+          python3 ci/wave20_check_account_boundaries.py wave34-3-evidence/wave20-roles-${{ matrix.java }}.json
+          python3 ci/wave21_check_customer_registration.py wave34-3-evidence/wave21-reg-${{ matrix.java }}.json
+          python3 ci/wave22_check_customer_credential.py wave34-3-evidence/wave22-credential-${{ matrix.java }}.json
+          python3 ci/wave23_check_public_registrar.py wave34-3-evidence/wave23-registrar-${{ matrix.java }}.json
+          python3 ci/wave24_check_three_principal_isolation.py wave34-3-evidence/wave24-principal-${{ matrix.java }}.json
+          python3 ci/wave25_check_private_broker.py wave34-3-evidence/wave25-private-${{ matrix.java }}.json
+          python3 ci/wave26_check_mtls_broker.py wave34-3-evidence/wave26-mtls-${{ matrix.java }}.json
+          python3 ci/wave27_check_signed_credential_intent.py wave34-3-evidence/wave27-issuer-${{ matrix.java }}.json
+          python3 ci/wave29_check_key_lifecycle.py wave34-3-evidence/wave29-lifecycle-${{ matrix.java }}.json
+          python3 ci/wave32_check_unkeyed_payment.py wave34-3-evidence/wave32-negative-${{ matrix.java }}.json
+          python3 ci/wave33_check_provider_signature.py wave34-3-evidence/wave33-hmac-${{ matrix.java }}.json
+      - name: Store complete JUnit before SECURITY re-run
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave34-3-full-jdk${{ matrix.java }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            target/surefire-reports/
+            wave34-3-evidence/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Execute actual SECURITY tagged method selection
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf target/surefire-reports
+          mvn --batch-mode --no-transfer-progress '-Dgroups=SECURITY | security' test
+          python3 ci/stage28_check_surefire.py security 151 64 target/surefire-reports wave34-3-evidence/security-roster-${{ matrix.java }}.json
+          python3 ci/wave34_3_release_control_gate.py security
+      - name: Preserve SECURITY roster and exact source SHA
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave34-3-security-jdk${{ matrix.java }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            target/surefire-reports/
+            wave34-3-evidence/
+          if-no-files-found: warn
+          retention-days: 14
