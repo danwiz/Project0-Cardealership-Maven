@@ -29,7 +29,7 @@ FROZEN = (
 )
 CLASS = "com.revature.repository.jdbc.Wave34LedgerIdentityCharacterizationTest"
 METHODS = {
-    "sevenDigitTransactionIsCreatedButCannotBeParsedOnNextPayment",
+    "sevenDigitBoundarySortsAfterLegacyMaximumAndBlocksNextPayment",
     "concurrentFirstPaymentLookupsFindNoRowToLock",
     "disposableDatabaseSequenceAllocatesDistinctIdsBeforeAnyLedgerRow",
 }
