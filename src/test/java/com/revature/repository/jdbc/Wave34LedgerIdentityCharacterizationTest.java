@@ -39,7 +39,7 @@ class Wave34LedgerIdentityCharacterizationTest {
     private static final String PG_PASSWORD = "ci-only-postgres-fixture";
 
     @Test
-    void sevenDigitTransactionIsCreatedButCannotBeParsedOnNextPayment() throws Exception {
+    void sevenDigitBoundarySortsAfterLegacyMaximumAndBlocksNextPayment() throws Exception {
         JdbcDatabase db = JdbcDatabase.inMemory(
                 "w344_id_limit_" + UUID.randomUUID().toString().replace("-", ""));
         db.migrate();
@@ -58,9 +58,21 @@ class Wave34LedgerIdentityCharacterizationTest {
         PaymentTransaction millionth = payments.record("buyer", ownership, 1);
         assertEquals("PAY-1000000", millionth.getTransactionId(),
                 "six digits is a *minimum formatting width*, not a maximum");
-        assertThrows(IllegalArgumentException.class, () ->
-                        payments.record("buyer", ownership, 1),
-                "nextGlobalSequence's parser rejects this seven-digit ID");
+        // The VARCHAR ordering itself is unsafe: PAY-999999 sorts after
+        // PAY-1000000 and is selected as the "latest" ID again.
+        try (Connection c = db.openConnection(); Statement stmt = c.createStatement();
+                ResultSet latest = stmt.executeQuery(
+                        "SELECT transaction_id FROM payment_transactions "
+                        + "ORDER BY transaction_id DESC LIMIT 1")) {
+            assertTrue(latest.next());
+            assertEquals("PAY-999999", latest.getString(1),
+                    "lexical ordering is not numeric ledger-ID ordering");
+        }
+        IllegalStateException duplicate = assertThrows(IllegalStateException.class,
+                () -> payments.record("buyer", ownership, 1),
+                "the allocator issues the same PAY-1000000 again");
+        assertTrue(duplicate.getCause() instanceof java.sql.SQLException,
+                "next payment fails database uniqueness, not a second commit");
 
         // Atomic rollback retains exact previously committed balance and count.
         try (Connection c = db.openConnection(); Statement statement = c.createStatement()) {
