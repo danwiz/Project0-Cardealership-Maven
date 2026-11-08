@@ -1,0 +1,67 @@
+name: Wave28 PG16 Asynchronous WAL Loss and Synchronous Remote-Apply Durability
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave28-wal-policy-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  wal-commit-policy:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    name: PostgreSQL16 ${{ matrix.scenario }} physical durability
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: [async, sync]
+    steps:
+      - name: Checkout exact immutable PR SHA without stored credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Install Java17 and Maven for actual dealership schema
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Assert exact reviewed SHA, synthetic Docker lab and script syntax
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          docker info >/dev/null
+          bash -n "ci/wave28_pg16_${{ matrix.scenario }}_$(test "${{ matrix.scenario }}" = async && printf lost_commit || printf remote_apply)_lab.sh"
+      - name: Run physical WAL commit-policy experiment
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          case "${{ matrix.scenario }}" in
+            async) mkdir -p wave28-async; bash ci/wave28_pg16_async_lost_commit_lab.sh 2>&1 | tee wave28-async/run.log ;;
+            sync) mkdir -p wave28-sync; bash ci/wave28_pg16_sync_remote_apply_lab.sh 2>&1 | tee wave28-sync/run.log ;;
+            *) exit 2 ;;
+          esac
+      - name: Preserve exact-SHA evidence and failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave28-pg16-${{ matrix.scenario }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            wave28-async/
+            wave28-sync/
+          if-no-files-found: warn
+          retention-days: 14
