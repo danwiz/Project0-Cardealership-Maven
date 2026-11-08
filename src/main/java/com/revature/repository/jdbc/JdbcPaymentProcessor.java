@@ -29,6 +29,27 @@ public final class JdbcPaymentProcessor implements PaymentProcessor {
         return inTransaction(connection -> record(connection, customer, ownershipId, amount));
     }
 
+    /**
+     * W34.2 disposable CI-only seam. This method never commits or starts its
+     * own transaction. Caller must have independently authenticated the
+     * synthetic provider receipt and hold the complete transaction boundary.
+     * Not connected to application entry points or production migrations.
+     */
+    PaymentTransaction recordWithinCandidateTransaction(Connection connection,
+            String customerName, long ownershipId, int amount) throws SQLException {
+        if (!"true".equalsIgnoreCase(System.getenv("CI"))
+                || !"true".equalsIgnoreCase(System.getenv("GITHUB_ACTIONS"))
+                || !"true".equalsIgnoreCase(System.getenv("W34_DISPOSABLE_ONLY"))) {
+            throw new SecurityException("W34.2 candidate is CI-only");
+        }
+        String customer = requireText(customerName, "customerName");
+        if (ownershipId <= 0 || amount <= 0) {
+            throw new IllegalArgumentException("ownership and amount must be positive");
+        }
+        return record(Objects.requireNonNull(connection, "connection"),
+                customer, ownershipId, amount);
+    }
+
     private PaymentTransaction record(Connection connection, String customer, long ownershipId, int amount) throws SQLException {
         List<PlanRow> plans = lockPlans(connection, customer);
         PlanRow selected = null;

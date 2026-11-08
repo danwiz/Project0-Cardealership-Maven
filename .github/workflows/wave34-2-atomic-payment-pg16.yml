@@ -1,0 +1,97 @@
+name: Wave34.2 Synthetic Signed Receipt Atomic PG16 Posting
+
+on:
+  pull_request:
+    branches:
+      - audit/wave34-1-provider-idempotency-review-20261108
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave34-2-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  atomic-pg16-review-only:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['11', '17']
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dealership_ci_owner
+          POSTGRES_PASSWORD: ci-only-postgres-fixture
+          POSTGRES_DB: dealership_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dealership_ci_owner -d dealership_ci"
+          --health-interval 10s --health-timeout 5s --health-retries 8
+    env:
+      CI: 'true'
+      W34_DISPOSABLE_ONLY: 'true'
+      DEALERSHIP_PG_TEST_URL: jdbc:postgresql://localhost:5432/dealership_ci
+      DEALERSHIP_PG_TEST_USER: dealership_ci_owner
+      DEALERSHIP_PG_TEST_PASSWORD: ci-only-postgres-fixture
+    steps:
+      - name: Checkout immutable PR head, no retained credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Exact SHA + test-only PostgreSQL scope
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          test "$DEALERSHIP_PG_TEST_URL" = "jdbc:postgresql://localhost:5432/dealership_ci"
+          test "$W34_DISPOSABLE_ONLY" = "true"
+      - name: Configure Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Execute 8 targeted Java and real PG16 methods
+        run: mvn -B -Dtest=ProviderPaymentIdentityTest,Wave34PostgresqlReceiptUniquenessTest,Wave34PostgresqlPaymentReconciliationTest test
+      - name: Require exact 8 JUnit identities, none skipped or failed
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+          directory=Path("target/surefire-reports")
+          names={
+            "com.revature.application.ProviderPaymentIdentityTest":4,
+            "com.revature.repository.jdbc.Wave34PostgresqlReceiptUniquenessTest":1,
+            "com.revature.repository.jdbc.Wave34PostgresqlPaymentReconciliationTest":3,
+          }
+          total=0
+          for cls,expected in names.items():
+            path=directory/("TEST-"+cls+".xml")
+            if not path.is_file(): raise SystemExit("NO-GO: missing "+str(path))
+            cases=list(ET.parse(path).getroot().iter("testcase"))
+            if len(cases)!=expected: raise SystemExit("NO-GO: wrong test identity count "+str(path))
+            if any(any(case.find(k) is not None for k in ("skipped","failure","error")) for case in cases):
+                raise SystemExit("NO-GO: skipped/failure/error in "+str(path))
+            total+=len(cases)
+          if total!=8: raise SystemExit("NO-GO: expected eight actual methods")
+          print("Wave34.2: 8/8 actual non-skipped regression methods on JDK matrix; synthetic only")
+          PY
+      - name: Preserve exact-SHA JUnit and SHA custody
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave34-2-jdk${{ matrix.java }}-${{ github.event.pull_request.head.sha }}
+          path: target/surefire-reports/
+          if-no-files-found: warn
+          retention-days: 14
