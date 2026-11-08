@@ -1,0 +1,57 @@
+name: Wave33 Synthetic Signed Processor Receipt and Concurrent Failover Posting
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave33-signed-payment-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  independent-processor-reconciliation:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout immutable reviewed source SHA
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Configure Java17 and Maven
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Verify source and disposable isolation guards
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          docker info >/dev/null
+          bash -n ci/wave33_pg16_signed_payment_concurrent_lab.sh
+      - name: Independent provider commit, lost acknowledgment, dealership fencing and once-only reconciliation
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wave33-pay
+          bash ci/wave33_pg16_signed_payment_concurrent_lab.sh 2>&1 | tee wave33-pay/run.log
+      - name: Preserve exact-SHA independent payment evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave33-signed-payment-${{ github.event.pull_request.head.sha }}
+          path: wave33-pay/
+          if-no-files-found: warn
+          retention-days: 14
