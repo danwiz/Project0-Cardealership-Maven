@@ -98,6 +98,23 @@ public final class JdbcWave34PaymentReconciliationCandidate {
 
     private Outcome postOnce(Connection connection, ProviderPaymentIdentity receipt)
             throws SQLException {
+        // Verify local ownership/contract BEFORE attempting receipt insertion;
+        // missing principals must fail closed as security errors, not FK errors.
+        // Bind external receipt to a pre-existing locally approved contract.
+        try (PreparedStatement ownership = connection.prepareStatement(
+                "SELECT owner_username,contract_id FROM owned_vehicles "
+                + "WHERE ownership_id=? FOR UPDATE")) {
+            ownership.setLong(1, receipt.getOwnershipId());
+            try (ResultSet row = ownership.executeQuery()) {
+                if (!row.next()
+                        || !receipt.getCustomer().equals(row.getString(1))
+                        || !receipt.getContractId().equals(row.getString(2))
+                        || row.next()) {
+                    throw new SecurityException("unmatched customer/ownership/contract");
+                }
+            }
+        }
+
         int inserted;
         try (PreparedStatement insert = connection.prepareStatement(
                 "INSERT INTO provider_payment_postings "
@@ -135,21 +152,6 @@ public final class JdbcWave34PaymentReconciliationCandidate {
                     String localId = row.getString(3);
                     if (row.next()) throw new SecurityException("multiple receipt bindings");
                     return new Outcome(localId, true);
-                }
-            }
-        }
-
-        // Bind external receipt to a pre-existing locally approved contract.
-        try (PreparedStatement ownership = connection.prepareStatement(
-                "SELECT owner_username,contract_id FROM owned_vehicles "
-                + "WHERE ownership_id=? FOR UPDATE")) {
-            ownership.setLong(1, receipt.getOwnershipId());
-            try (ResultSet row = ownership.executeQuery()) {
-                if (!row.next()
-                        || !receipt.getCustomer().equals(row.getString(1))
-                        || !receipt.getContractId().equals(row.getString(2))
-                        || row.next()) {
-                    throw new SecurityException("unmatched customer/ownership/contract");
                 }
             }
         }
