@@ -1,0 +1,168 @@
+{
+  "milestone": "WAVE34.4",
+  "source_baseline_sha": "946fdaf2362aadff3e4dc38db36a253040242913",
+  "release_disposition": "NO-GO",
+  "operating_mode": "DISPOSABLE_PG16_CHARACTERIZATION_AND_REVIEW_ONLY",
+  "protected_branches_changed": false,
+  "payment_production_migration": false,
+  "real_provider_authenticated": false,
+  "targeted_tests": [
+    {
+      "id": "LID-01",
+      "method": "sevenDigitBoundarySortsAfterLegacyMaximumAndBlocksNextPayment",
+      "interpretation": "legacy ID lexical ordering and duplicate-identifier failure at seven-digit boundary",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "LID-02",
+      "method": "concurrentFirstPaymentLookupsFindNoRowToLock",
+      "interpretation": "empty-row locking limitation, NOT committed-payment failure proof",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "LID-03",
+      "method": "disposableDatabaseSequenceAllocatesDistinctIdsBeforeAnyLedgerRow",
+      "interpretation": "sequence feasibility ONLY, NOT migration acceptance",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "real_provider_contract_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER",
+      "approvals": "PENDING"
+    }
+  ],
+  "qa_targets": {
+    "full": {
+      "methods": 387,
+      "classes": 110,
+      "reason": "Wave34.3 384/109 plus one new class containing three methods"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "reason": "New Wave34.4 characterization is not SECURITY-tagged"
+    }
+  },
+  "historical_gates": {
+    "stage27": {
+      "reported_gates": 14,
+      "reported_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_gates": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "decisions": [
+    {
+      "id": "DEC-W34.4-01",
+      "title": "Ledger identity sequence vs UUID/ULID and legacy IDs",
+      "owner": "DBA/architect",
+      "status": "PENDING_OWNER_APPROVAL"
+    },
+    {
+      "id": "DEC-W34.4-02",
+      "title": "Migration version, grants, backup, cutover, rollback",
+      "owner": "DBA/release owner",
+      "status": "PENDING_OWNER_APPROVAL"
+    },
+    {
+      "id": "DEC-W34.4-03",
+      "title": "Currency minor units and accounting authority",
+      "owner": "Finance/payments",
+      "status": "PENDING_OWNER_APPROVAL"
+    },
+    {
+      "id": "DEC-W34.4-04",
+      "title": "Provider merchant identity and independent cryptographic verification",
+      "owner": "AppSec/provider/payments",
+      "status": "PENDING_OWNER_APPROVAL"
+    },
+    {
+      "id": "DEC-W34.4-05",
+      "title": "Original academic source-rights and data retention",
+      "owner": "Owner/legal",
+      "status": "PENDING_OWNER_APPROVAL"
+    }
+  ],
+  "limitations": "Three tests identify risks and sequence characteristics in synthetic fixtures; do not close production payment or Stage27 release gates."
+}
