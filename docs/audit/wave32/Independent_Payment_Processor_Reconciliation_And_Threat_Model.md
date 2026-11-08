@@ -42,7 +42,7 @@ Wave32 payment lab explicitly stops/fences the old primary **before** promotion,
 
 ## Priorities D/E — Rights and release gates
 
-The Wave31 inherited Java11/17 regression baseline is **374 full and 145 SECURITY test methods per JDK**. Wave32 adds a standalone test-only executable, not a JUnit method. The normal inherited regression must still preserve every prior method identity.
+Wave32 adds **one named SECURITY-tagged JUnit characterization test** to the inherited Wave31 Java11/17 baseline, targeting **375 full methods / 105 classes and 146 SECURITY methods / 61 classes per JDK**, with every one of Wave31's 374 full and 145 SECURITY identities retained. It explicitly demonstrates that calling the existing local \`JdbcPaymentProcessor.record(customer, ownership, amount)\` twice with the same amount creates two different local transactions and reduces the payment-plan balance twice. This behavior is not inherently a defect for two legitimate installments; it proves that the existing API cannot distinguish a retry of a single external processor request from a genuine second payment. The production API is **unchanged**, and the finding remains an open release concern. Wave32 also adds a separate standalone test-only executable for independent provider reconciliation.
 
 Complete Maven build-plugin/transitive SCA, original educational source rights/NOTICE and quarantined legacy serialized-data migration. Assign named independent AppSec, DBA, QA, architect, finance/payment operations, legal/source-rights and release-owner approvals. Numerical business RPO/RTO objectives remain owner decisions, not inferred from a successful test.
 
