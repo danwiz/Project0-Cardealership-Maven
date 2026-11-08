@@ -124,9 +124,9 @@ class Wave34PostgresqlReceiptUniquenessTest {
             // Same provider transaction with a different request is NOT allowed.
             ProviderPaymentIdentity transactionCollision = receipt("req-0002",
                     "ptx-0001", ownership, 1250);
-            SQLException collision = assertThrows(SQLException.class,
-                    () -> insert(scoped, transactionCollision));
-            assertEquals("23505", collision.getSQLState(), "provider transaction unique constraint");
+            assertEquals(0, insert(scoped, transactionCollision),
+                    "the second unique key must block a reused provider transaction");
+            assertCounts(scoped, 1);
 
             // A separate provider request and transaction can represent a second
             // legitimate same-amount installment (this test does NOT post it).
@@ -180,7 +180,7 @@ class Wave34PostgresqlReceiptUniquenessTest {
                         + "customer_name,ownership_id,contract_id,amount,currency_code,"
                         + "verified_receipt_digest,signing_key_id) "
                         + "VALUES(?,?,?,?,?,?,?,?,?,?) "
-                        + "ON CONFLICT (provider_code,provider_request_id) DO NOTHING")) {
+                        + "ON CONFLICT DO NOTHING")) {
             put.setString(1, claim.getProvider());
             put.setString(2, claim.getRequestId());
             put.setString(3, claim.getTransactionId());
