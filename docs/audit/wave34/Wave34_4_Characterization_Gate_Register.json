@@ -9,8 +9,8 @@
   "targeted_tests": [
     {
       "id": "LID-01",
-      "method": "sevenDigitTransactionIsCreatedButCannotBeParsedOnNextPayment",
-      "interpretation": "legacy parser boundary characterization",
+      "method": "sevenDigitBoundarySortsAfterLegacyMaximumAndBlocksNextPayment",
+      "interpretation": "legacy ID lexical ordering and duplicate-identifier failure at seven-digit boundary",
       "status": "PENDING_EXACT_SHA_CI"
     },
     {
