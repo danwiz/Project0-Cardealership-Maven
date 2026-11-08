@@ -1,0 +1,63 @@
+name: Wave31 PG16 Connected Standby Positive COMMIT and WAL Position Matrix
+
+on:
+  pull_request:
+    branches:
+      - integration/stage28-controlled-maven-port-20261105
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wave31-positive-${{ github.event.pull_request.number }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  connected-positive-commit:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    name: PG16 acknowledged ${{ matrix.mode }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [async, remote_write, 'on', remote_apply]
+    steps:
+      - name: Checkout immutable PR commit without stored credentials
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Configure Java17 and Maven
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Verify exact source SHA and disposable Docker script
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          docker info >/dev/null
+          bash -n ci/wave31_pg16_connected_acknowledged_commit_lab.sh
+      - name: Positive dealership commit, WAL sample, standby replay, fenced promotion
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+          W31_COMMIT_MODE: ${{ matrix.mode }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wave31-positive
+          bash ci/wave31_pg16_connected_acknowledged_commit_lab.sh 2>&1 | tee wave31-positive/run.log
+      - name: Preserve original exact-SHA WAL evidence and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: wave31-pg16-positive-${{ matrix.mode }}-${{ github.event.pull_request.head.sha }}
+          path: wave31-positive/
+          retention-days: 14
+          if-no-files-found: warn
