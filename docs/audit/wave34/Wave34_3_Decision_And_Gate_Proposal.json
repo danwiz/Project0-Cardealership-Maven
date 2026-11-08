@@ -1,0 +1,180 @@
+{
+  "register_id": "W34-3-RELEASE-CONTROL-ARCHITECTURE",
+  "version": "0.1.0-PROPOSED",
+  "project": "danwiz/Project0-Cardealership-Maven",
+  "source_baseline_sha": "c369e22a5dd87831286bf821bf7f59e30a9a7311",
+  "release_disposition": "NO-GO",
+  "verification_scope": "review-only architecture / proposed control completeness",
+  "historic_stage27_register": {
+    "reported_gate_total": 14,
+    "reported_closed": 0,
+    "status": "HISTORICAL_UNRECONCILED",
+    "note": "This list of 12 proposed decisions is NOT the original Stage27 gate register and does not replace or renumber its 14 formal gates."
+  },
+  "previous_phase16": {
+    "reported_gate_total": 17,
+    "reported_blocking": 12,
+    "status": "HISTORICAL_UNRECONCILED",
+    "note": "Separate older source disposition/integration register; NOT a denominator for Stage27."
+  },
+  "permission_boundary": {
+    "production_deployment": false,
+    "merge_to_master": false,
+    "production_sql_migration": false,
+    "real_payments": false,
+    "secret_changes": false
+  },
+  "decisions": [
+    {
+      "id": "W34-003",
+      "title": "Provider trust and merchant identity",
+      "priority": "P0",
+      "decision_authority": "owner + AppSec + payments operations",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-003-Independent-Provider-Trust.md",
+      "production_implemented": false
+    },
+    {
+      "id": "W34-004",
+      "title": "Signature canonical fields and key rotation",
+      "priority": "P0",
+      "decision_authority": "AppSec + provider owner",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-003-Independent-Provider-Trust.md",
+      "production_implemented": false
+    },
+    {
+      "id": "W34-005",
+      "title": "Customer, ownership and payment authority",
+      "priority": "P0",
+      "decision_authority": "owner + security",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-003-Independent-Provider-Trust.md",
+      "production_implemented": false
+    },
+    {
+      "id": "W34-006",
+      "title": "Currency unit, rounding, finance treatment",
+      "priority": "P0",
+      "decision_authority": "finance/payments owner",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-004-Ledger-Sequence-Migration.md",
+      "production_implemented": false
+    },
+    {
+      "id": "W34-007",
+      "title": "Legacy transaction sequence and concurrency",
+      "priority": "P0",
+      "decision_authority": "DBA + engineer",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-004-Ledger-Sequence-Migration.md",
+      "production_implemented": false
+    },
+    {
+      "id": "W34-008",
+      "title": "Schema v6 migration, rollback and grants",
+      "priority": "P0",
+      "decision_authority": "DBA + release owner",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-004-Ledger-Sequence-Migration.md",
+      "production_implemented": false
+    },
+    {
+      "id": "W34-009",
+      "title": "Transactional outbox, immutable event journal",
+      "priority": "P1",
+      "decision_authority": "DBA + architect",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-005-Outbox-Refund-HA-Controls.md",
+      "production_implemented": false
+    },
+    {
+      "id": "W34-010",
+      "title": "Refund/chargeback/settlement accounting",
+      "priority": "P0",
+      "decision_authority": "payments/finance/legal",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-005-Outbox-Refund-HA-Controls.md",
+      "production_implemented": false
+    },
+    {
+      "id": "W34-011",
+      "title": "Quorum fencing/router/RPO/RTO",
+      "priority": "P0",
+      "decision_authority": "SRE/DBA + business owner",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-005-Outbox-Refund-HA-Controls.md",
+      "production_implemented": false
+    },
+    {
+      "id": "W34-012",
+      "title": "Source rights and provenance/retention",
+      "priority": "P0",
+      "decision_authority": "owner + legal",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-004-Ledger-Sequence-Migration.md",
+      "production_implemented": false
+    },
+    {
+      "id": "W34-013",
+      "title": "Independent review, SCA and release signoff",
+      "priority": "P0",
+      "decision_authority": "release owner + AppSec + QA",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-005-Outbox-Refund-HA-Controls.md",
+      "production_implemented": false
+    },
+    {
+      "id": "W34-014",
+      "title": "Legacy API disposition and compatibility",
+      "priority": "P0",
+      "decision_authority": "owner + architect",
+      "status": "PENDING_OWNER_REVIEW",
+      "evidence": "SOURCE_GAP_AND_PROPOSED_DESIGN",
+      "design_document": "docs/audit/wave34/ADR-W34-004-Ledger-Sequence-Migration.md",
+      "production_implemented": false
+    }
+  ],
+  "qa_targets": [
+    {
+      "id": "QA-W34-FULL",
+      "source": "wave33 baseline 376 tests plus wave34.1/34.2 eight tests",
+      "expected_methods": 384,
+      "expected_classes": 109,
+      "verification": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "QA-W34-SECURITY",
+      "source": "wave33 baseline 147 SECURITY tests plus 4 tagged PG16 tests",
+      "expected_methods": 151,
+      "expected_classes": 64,
+      "verification": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "QA-W34-EXTERNAL",
+      "source": "independent provider and full canonical signature",
+      "verification": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "QA-W34-MIGRATION",
+      "source": "approved operator v6 migration/restore",
+      "verification": "NOT_IMPLEMENTED"
+    }
+  ],
+  "audit_metadata": {
+    "source_type": "repository source inspection and prior exact-SHA GitHub Actions",
+    "owner_ratification": "NOT_GIVEN",
+    "independent_review": "NOT_PERFORMED"
+  }
+}
