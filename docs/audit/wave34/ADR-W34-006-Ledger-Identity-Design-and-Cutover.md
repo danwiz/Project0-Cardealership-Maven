@@ -12,7 +12,7 @@
 ## Wave34.4 characterization (expected behavior of unmodified code)
 | Test | Technique | Expected observation | Interpretation |
 | --- | --- | --- | --- |
-| Six-to-seven digit boundary | H2 schema v5 fixture seeds PAY-999999; actual JdbcPaymentProcessor.record called twice | First generates PAY-1000000; second throws IllegalArgumentException; rollback retains prior payment/balance | CONFIRMED BUG if executable JUnit passes. No product fix delivered |
+| Six-to-seven digit boundary | H2 schema v5 fixture seeds PAY-999999; actual JdbcPaymentProcessor.record called twice | First generates PAY-1000000; VARCHAR sort still selects PAY-999999 as latest, so next attempt raises duplicate-key error and rolls back; the parser also rejects seven-digit IDs if selected | CONFIRMED BUG if executable JUnit passes. No product fix delivered |
 | Concurrent first-entry read | Real PG16, two SERIALIZABLE connections issue exact legacy latest-ID SELECT FOR UPDATE on an empty ledger | Both see no existing row | CONFIRMED ABSENCE OF LOCKED ID ROW, **not** proof both can commit a duplicate charge |
 | Sequence alternative | Disposable PG16 sequence, 4 workers * 8 nextval calls, no payment records | 32 distinct IDs, no payment transaction | DESIGN FEASIBILITY ONLY; gaps from rollbacks are normal and allowed |
 
