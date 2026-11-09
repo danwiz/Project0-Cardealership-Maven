@@ -52,3 +52,14 @@ Target acceptance roster: **438 full JUnit methods / 124 classes** on each of Ja
 - Historic Stage27 14 gates/0 formally closed and earlier Phase16 17 gates/12 blockers are separately recorded, not silently reconciled or approved; all owner/Finance/DBA/AppSec/QA/SRE/legal release signatures pending.
 
 **Decision:** PROPOSED test-only ledger governance. **Production NO-GO; leave stacked PR draft, no merges, deployment, real funds or financial close.**
+
+## Initial CI failure and inherited Wave34.15 synthetic GL replay repair
+
+The initial Wave34.18 review SHA \`5b0a33807a166e99195c2cac86ad8b0d3a909efb\` was tested by GitHub Actions [#42714152238](https://github.com/danwiz/Project0-Cardealership-Maven/actions/runs/42714152238). Source custody **passed**; Java 17 and 11 each failed the **W3418-03** assertion because the test reused an already committed adjustment ID with a different period, and the application-level **changed replay identity HOLD** correctly raised \`SecurityException\` before SQL. W3418-03 is corrected to verify changed replay denial *separately* from a **new** backdated adjustment reaching the SQL closed-period gate (SQLSTATE 42501).
+
+The Java 11 run separately exposed an **inherited Wave34.15 synthetic GL concurrency error**, SQLSTATE \`23505\` on unique \`w3415_gl_events_provider_event_id_key\` in \`Wave34PostgresqlBalancedGlReconciliationTest.concurrentReplayCommitsOnlyOneBalancedEventAndApprovalCannotBeReused\`. A targeted test-only remediation is tracked in [issue #53](https://github.com/danwiz/Project0-Cardealership-Maven/issues/53). The prior fixture uses \`ON CONFLICT (event_id) DO NOTHING\` despite multiple unique constraints also reused by exact concurrent replay. Wave34.18 expands from seven to **eight** review-only changed files solely to repair the **inherited W34.15 test** without modifying prior accepted draft PR #48:
+- Use \`ON CONFLICT DO NOTHING\` for the synthetic GL event insert, then **require exact same event ID readback and matching sequence, event kind, minor amount, currency, canonical digest and approval UUID**. A collision on another event's provider-event ID/sequence/approval UUID is not silently accepted.
+- The existing negative test for a different event reusing the same approval UUID now requires an explicit \`SecurityException\` with unchanged event and journal totals; previously it expected raw SQLSTATE 23505.
+- Source custody explicitly allows this one inherited JUnit file and statically enforces the conflict/readback guard, while freezing the original W34.15 disposable SQL, Wave34.16 fix, Wave34.17 fixture, production v5 runtime, and protected \`master\`.
+
+Both original CI failures are retained as audit evidence. **A corrected passing run, if observed, establishes only synthetic fixtures, not a real provider/GL concurrency or payment idempotency fix.** Independent stress verification for both issue #51 and issue #53 remains an OPEN reviewer action.
