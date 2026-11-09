@@ -1,0 +1,288 @@
+{
+  "milestone": "WAVE34.19",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "c55812a0662fd1199b5b37be598d7cdf2bc5520b",
+  "release_disposition": "NO-GO",
+  "scope": "DISPOSABLE_POSTGRESQL16_TEST_LOCAL_WITNESS_REVOCATION_AND_OUTBOX",
+  "invariants": {
+    "protected_master_modified": false,
+    "production_payment_code_modified": false,
+    "production_schema_migrated": false,
+    "real_independent_witness_verified": false,
+    "external_finance_idp_verified": false,
+    "real_provider_delivery_verified": false,
+    "exactly_once_external_delivery_verified": false,
+    "production_outbox_integrated": false,
+    "real_funds_moved": false,
+    "app_schema_version": 5
+  },
+  "test_targets": {
+    "full": {
+      "methods": 442,
+      "classes": 125,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W3419-01",
+      "method": "signedLabWitnessCheckpointDetectsTamperedPrimaryWithoutIndependentCustody",
+      "scenario": "simulated-witness-detects-primary-tamper",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3419-02",
+      "method": "revocationCommittedWhileStaleApprovalWaitsMustDenySqlInsert",
+      "scenario": "revocation-at-sql-insert-lock",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3419-03",
+      "method": "crashBeforeAckPermitsRedeliveryButOneLocalReceiptAndOutbox",
+      "scenario": "crash-before-ack-local-outbox-replay",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3419-04",
+      "method": "concurrentExactEnqueueIsIdempotentAndApprovalReuseAcrossIdsHeld",
+      "scenario": "concurrent-adjustment-enqueue-and-approval-reuse",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-19-evidence",
+    "scenarios": [
+      "simulated-witness-detects-primary-tamper",
+      "revocation-at-sql-insert-lock",
+      "crash-before-ack-local-outbox-replay",
+      "concurrent-adjustment-enqueue-and-approval-reuse"
+    ],
+    "signed": false,
+    "externally_notarized": false,
+    "fields": [
+      "scenario",
+      "source_head",
+      "fixture",
+      "schema_version",
+      "synthetic_adjustments",
+      "synthetic_chain_entries",
+      "synthetic_outbox_messages",
+      "synthetic_delivery_receipts",
+      "synthetic_witness_receipts",
+      "simulated_chain_valid",
+      "chain_tip_sha256",
+      "legacy_payment_entries",
+      "real_independent_witness_verified",
+      "external_finance_idp_verified",
+      "real_provider_delivery_verified",
+      "exactly_once_external_delivery_verified",
+      "production_outbox_integrated",
+      "production_authorized",
+      "release_disposition"
+    ]
+  },
+  "gates": [
+    {
+      "id": "OUT-01",
+      "title": "Independently attested bank merchant GL sources",
+      "status": "NOT_VERIFIED",
+      "approved_for_production": false
+    },
+    {
+      "id": "OUT-02",
+      "title": "Truly independently anchored witness receipt and signature",
+      "status": "SIMULATED_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "OUT-03",
+      "title": "True WORM chain tip storage and separate custody",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "OUT-04",
+      "title": "Human maker checker IdP enrollment and finance delegation",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "OUT-05",
+      "title": "Real revocation at commit across distributed issuer DB",
+      "status": "ONE_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "OUT-06",
+      "title": "Approved prior-period debit and credit GL policy",
+      "status": "NOT_APPROVED",
+      "approved_for_production": false
+    },
+    {
+      "id": "OUT-07",
+      "title": "Atomic adjustment metadata and transactional outbox",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "OUT-08",
+      "title": "External delivery ACK dedupe replay dead-letter reconciliation",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "OUT-09",
+      "title": "Real provider PVA-01..16 plus HA recovery",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "OUT-10",
+      "title": "Issues 51 53 stress and legacy PAY ID/public API defects",
+      "status": "OPEN_DEFECT",
+      "approved_for_production": false
+    },
+    {
+      "id": "OUT-11",
+      "title": "Independent Controller DBA AppSec QA SRE Legal owner signoffs",
+      "status": "PENDING",
+      "approved_for_production": false
+    },
+    {
+      "id": "OUT-12",
+      "title": "Historical Stage27 and Phase16 release authorization",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "external_provider_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Controller/finance",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Treasury/bank owner",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Merchant/payments owner",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA/SRE/HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "inherited_open_issues": [
+    {
+      "number": 51,
+      "status": "OPEN_STRESS_VALIDATION_PENDING",
+      "synthetic_repair_files_frozen": true
+    },
+    {
+      "number": 53,
+      "status": "OPEN_STRESS_VALIDATION_PENDING",
+      "synthetic_repair_files_frozen": true
+    }
+  ],
+  "limitations": "Test-local source, witness, maker and checker keys in one JVM; one privileged CI PG16 database stores both chain and witness; no external anchor or true WORM. Outbox ACK is local, crash before ACK permits redelivery; exactly once external effects are unproved. Metadata-only adjustments do not implement an approved GL or finance close."
+}
