@@ -1,0 +1,275 @@
+{
+  "milestone": "WAVE34.17",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "5107c7fdd1e3528a969498c7bf47574190ef3195",
+  "release_disposition": "NO-GO",
+  "scope": "DISPOSABLE_POSTGRESQL16_TEST_ONLY_SUSPENSE_EXCEPTION_CLOSE",
+  "invariants": {
+    "protected_master_modified": false,
+    "production_payment_code_modified": false,
+    "production_schema_migrated": false,
+    "independent_source_verified": false,
+    "independent_finance_approval_verified": false,
+    "production_period_close_verified": false,
+    "production_gl_integrated": false,
+    "real_funds_moved": false,
+    "non_superuser_journal_custody_verified": false,
+    "app_schema_version": 5
+  },
+  "test_targets": {
+    "full": {
+      "methods": 434,
+      "classes": 123,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W3417-01",
+      "method": "exceptionHoldRequiresBalancedReleaseAndDualReviewBeforePeriodClose",
+      "scenario": "exception-release-and-authorized-close",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3417-02",
+      "method": "forgedSourceExpiredReviewerSelfApprovalAndChangedClaimsRemainOnHold",
+      "scenario": "forged-evidence-and-reviewer-hold",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3417-03",
+      "method": "concurrentIdenticalReleasePostsOnceAndApprovalCannotCrossExceptions",
+      "scenario": "concurrent-idempotency-and-approval-reuse",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3417-04",
+      "method": "deferredCloseAndUnbalancedSuspenseInjectionRollbackWithoutPartialRecord",
+      "scenario": "deferred-close-and-suspense-rollback",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-17-evidence",
+    "scenarios": [
+      "exception-release-and-authorized-close",
+      "forged-evidence-and-reviewer-hold",
+      "concurrent-idempotency-and-approval-reuse",
+      "deferred-close-and-suspense-rollback"
+    ],
+    "signed": false,
+    "independent_timestamp": false,
+    "fields": [
+      "scenario",
+      "source_head",
+      "fixture",
+      "schema_version",
+      "synthetic_exceptions",
+      "synthetic_open_exceptions",
+      "synthetic_suspense_events",
+      "synthetic_suspense_net_minor",
+      "synthetic_suspense_debits_minor",
+      "synthetic_suspense_credits_minor",
+      "legacy_payment_entries",
+      "reconciliation_digest_sha256",
+      "independent_source_verified",
+      "independent_finance_approval_verified",
+      "production_period_close_verified",
+      "real_funds_moved",
+      "production_authorized",
+      "release_disposition"
+    ]
+  },
+  "gates": [
+    {
+      "id": "CLOSE-01",
+      "title": "Independently authenticated provider bank and GL evidence",
+      "status": "NOT_VERIFIED",
+      "approved_for_production": false
+    },
+    {
+      "id": "CLOSE-02",
+      "title": "Controller-approved legal entity suspense COA and currency policy",
+      "status": "NOT_APPROVED",
+      "approved_for_production": false
+    },
+    {
+      "id": "CLOSE-03",
+      "title": "Typed exception case workflow source custody and SLA",
+      "status": "SYNTHETIC_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "CLOSE-04",
+      "title": "Balanced suspense HOLD and RELEASE journal",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "CLOSE-05",
+      "title": "Human independent maker-checker and finance delegation",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "CLOSE-06",
+      "title": "Zero unresolved and suspense at atomic period close",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "CLOSE-07",
+      "title": "Independent WORM custody and restricted non-superuser SQL owner",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "CLOSE-08",
+      "title": "Controller-approved real month-end close/post-close adjustment",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "CLOSE-09",
+      "title": "PAY identifier allocator and unkeyed public payment API",
+      "status": "OPEN_DEFECT",
+      "approved_for_production": false
+    },
+    {
+      "id": "CLOSE-10",
+      "title": "External provider PVA-01..16 and HA restore",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "CLOSE-11",
+      "title": "Independent finance owner DBA AppSec QA SRE legal reviews",
+      "status": "PENDING",
+      "approved_for_production": false
+    },
+    {
+      "id": "CLOSE-12",
+      "title": "Historical Stage27 Phase16 formal release gates",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "external_provider_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Controller/finance",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Treasury/bank owner",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Merchant/payments owner",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA/SRE/HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "limitations": "Source variance and maker/checker keys generated inside a single JUnit process. Balanced suspense accounts 1390 and 1990 are not an approved legal-entity COA or real GL. Elevated CI DBA can disable triggers; no independent Controller finance approval, bank/provider/GL, production financial period close, GAAP policy or real money."
+}
