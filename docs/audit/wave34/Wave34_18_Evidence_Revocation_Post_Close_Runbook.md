@@ -45,3 +45,11 @@ Real maker/checker IdP enrollment and independent approvals; Controller-signed a
 | EVID-12 | Formal separate Stage27 and Phase16 release disposition | NO-GO |
 
 **No real accounting adjustment, issuer authorization, production database migration, payment, financial close, PR merge or deployment is permitted.**
+
+## Exact-source CI defect / remediation register
+
+Initial Wave34.18 [GitHub Actions #42714152238](https://github.com/danwiz/Project0-Cardealership-Maven/actions/runs/42714152238) passed source custody but failed full Java11/Java17 testing at the original exact SHA: the W3418-03 test confused changed-event replay with a distinct backdated new event, and the inherited Wave34.15 concurrency test reported SQLSTATE 23505 for a non-target \`provider_event_id\` unique constraint on Java11.
+
+W3418-03 now separately checks a **SecurityException for changed replay** and a **SQLSTATE 42501 for a truly new backdated adjustment**. The eight-file Wave34.18 PR also includes a narrowly scoped \`Wave34PostgresqlBalancedGlReconciliationTest.java\` repair for [issue #53](https://github.com/danwiz/Project0-Cardealership-Maven/issues/53): generic \`ON CONFLICT DO NOTHING\` followed by exact stored event ID/digest/amount/approval readback, with explicit rejection for cross-event reuse. Preserve the original failed source SHA and all logs, rerun the entire Java11/17 PostgreSQL16 full and SECURITY matrix on the amended exact head, and require four W3418 scenario manifests before accepting.
+
+The original Wave34.15 PR #48, prior W34.16/17 PRs, production payment processor, schema migrator, and earlier SQL fixtures remain unchanged. The tests are still controlled by a privileged CI PostgreSQL account and synthetic signing keys; no production release gate is affected.
