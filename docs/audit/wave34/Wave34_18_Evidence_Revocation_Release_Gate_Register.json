@@ -275,5 +275,23 @@
     "status": "OPEN_STRESS_VALIDATION_PENDING",
     "repaired_test_source_frozen": true
   },
-  "limitations": "Source references and ephemeral maker/checker test keys all generated inside one JUnit process. The hash tip is not externally anchored; privileged PostgreSQL CI owner can modify both chain and cursor; the adjustment is metadata only, not an approved double-entry accounting journal or real closed-period correction."
+  "limitations": "Source references and ephemeral maker/checker test keys all generated inside one JUnit process. The hash tip is not externally anchored; privileged PostgreSQL CI owner can modify both chain and cursor; the adjustment is metadata only, not an approved double-entry accounting journal or real closed-period correction.",
+  "inherited_gl_replay_repair": {
+    "issue_url": "https://github.com/danwiz/Project0-Cardealership-Maven/issues/53",
+    "source_file": "src/test/java/com/revature/repository/jdbc/Wave34PostgresqlBalancedGlReconciliationTest.java",
+    "observed_run_id": 42714152238,
+    "observed_sqlstate": "23505",
+    "constraint": "w3415_gl_events_provider_event_id_key",
+    "scope": "REVIEW_ONLY_SYNTHETIC_TEST",
+    "status": "PENDING_EXACT_SHA_CI",
+    "repair": "ON_CONFLICT_DO_NOTHING_PLUS_EXACT_EVENT_ID_SEQUENCE_AMOUNT_DIGEST_APPROVAL_READBACK",
+    "production_idempotency_fixed": false,
+    "release_approved": false
+  },
+  "initial_wave34_18_failure": {
+    "run_id": 42714152238,
+    "reason": "W3418-03 changed already-stored adjustment ID before SQL closed-period check",
+    "remediation": "separate changed replay rejection from distinct backdated new adjustment",
+    "status": "PENDING_EXACT_SHA_CI"
+  }
 }
