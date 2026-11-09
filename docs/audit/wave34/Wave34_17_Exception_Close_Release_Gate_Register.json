@@ -271,5 +271,18 @@
       "status": "UNRECONCILED_HISTORICAL"
     }
   },
-  "limitations": "Source variance and maker/checker keys generated inside a single JUnit process. Balanced suspense accounts 1390 and 1990 are not an approved legal-entity COA or real GL. Elevated CI DBA can disable triggers; no independent Controller finance approval, bank/provider/GL, production financial period close, GAAP policy or real money."
+  "limitations": "Source variance and maker/checker keys generated inside a single JUnit process. Balanced suspense accounts 1390 and 1990 are not an approved legal-entity COA or real GL. Elevated CI DBA can disable triggers; no independent Controller finance approval, bank/provider/GL, production financial period close, GAAP policy or real money.",
+  "inherited_test_repair": {
+    "source_class": "com.revature.repository.jdbc.Wave34PostgresqlSettlementBatchApprovalTest",
+    "issue_url": "https://github.com/danwiz/Project0-Cardealership-Maven/issues/51",
+    "failed_initial_run_id": 42709465166,
+    "failed_java11_attempts": 2,
+    "observed_sqlstate": "23505",
+    "observed_constraint": "w3416_batch_reviews_maker_approval_id_key",
+    "change_scope": "TEST_ONLY_REVIEW",
+    "remediation": "ON_CONFLICT_DO_NOTHING_ALL_UNIQUE_INDEXES_WITH_EXACT_ROW_READBACK_AND_CROSS_BATCH_APPROVAL_REJECTION",
+    "status": "PENDING_EXACT_SHA_CI",
+    "production_idempotency_fixed": false,
+    "release_approved": false
+  }
 }
