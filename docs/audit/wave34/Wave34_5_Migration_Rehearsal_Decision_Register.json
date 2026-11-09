@@ -1,0 +1,180 @@
+{
+  "milestone": "WAVE34.5",
+  "status": "CANDIDATE_EVIDENCE_ONLY",
+  "source_baseline_sha": "087031e73b30817b58f423b72eafa28c0c3b8ce2",
+  "branch": "audit/wave34-5-ledger-identity-migration-rehearsal-20261109",
+  "release_disposition": "NO-GO",
+  "protection": {
+    "source_runtime_changed": false,
+    "protected_branches_changed": false,
+    "production_schema_migration": false,
+    "application_schema_version": 5,
+    "customer_records_accessed": false,
+    "provider_credentials_used": false,
+    "real_payments_processed": false
+  },
+  "qa_targets": {
+    "full": {
+      "methods": 390,
+      "classes": 111,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "rehearsal_tests": [
+    {
+      "id": "W345-01",
+      "title": "backfill_preserves_historical_six_and_seven_digit_references",
+      "status": "PENDING_EXACT_SHA_CI",
+      "scope": "DISPOSABLE_PG16_ONLY",
+      "acceptance_kind": "SCHEMA_MAPPING_FEASIBILITY_NOT_PRODUCTION_APPROVAL"
+    },
+    {
+      "id": "W345-02",
+      "title": "concurrent_database_generated_identities_are_unique",
+      "status": "PENDING_EXACT_SHA_CI",
+      "scope": "DISPOSABLE_PG16_ONLY",
+      "acceptance_kind": "SCHEMA_MAPPING_FEASIBILITY_NOT_PRODUCTION_APPROVAL"
+    },
+    {
+      "id": "W345-03",
+      "title": "foreign_key_failure_rolls_back_mapping_with_sequence_gap",
+      "status": "PENDING_EXACT_SHA_CI",
+      "scope": "DISPOSABLE_PG16_ONLY",
+      "acceptance_kind": "SCHEMA_MAPPING_FEASIBILITY_NOT_PRODUCTION_APPROVAL"
+    }
+  ],
+  "inherited_findings": [
+    {
+      "id": "W34-4-LID-001",
+      "name": "VARCHAR lexicographic seven-digit ID collision",
+      "status": "CONFIRMED_DEFECT_UNRESOLVED"
+    },
+    {
+      "id": "W34-4-LID-002",
+      "name": "empty-first-row SELECT FOR UPDATE lock gap",
+      "status": "CHARACTERIZED_UNRESOLVED"
+    }
+  ],
+  "real_provider_acceptance": [
+    {
+      "case_id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "case_id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "owner_decisions": [
+    {
+      "id": "OD-1",
+      "title": "DB-generated ID mapping vs append-only event ledger",
+      "owner": "DBA/Architect",
+      "status": "PENDING_OWNER_APPROVAL"
+    },
+    {
+      "id": "OD-2",
+      "title": "approved accounting unit and currency",
+      "owner": "Finance/Payments",
+      "status": "PENDING_OWNER_APPROVAL"
+    },
+    {
+      "id": "OD-3",
+      "title": "operator migration version/grants/rollback",
+      "owner": "DBA/Release",
+      "status": "PENDING_OWNER_APPROVAL"
+    },
+    {
+      "id": "OD-4",
+      "title": "legacy API & external reference compatibility",
+      "owner": "Architect/Owner",
+      "status": "PENDING_OWNER_APPROVAL"
+    },
+    {
+      "id": "OD-5",
+      "title": "provider authentication and merchant state",
+      "owner": "AppSec/Payments",
+      "status": "PENDING_OWNER_APPROVAL"
+    },
+    {
+      "id": "OD-6",
+      "title": "data rights, privacy, audit retention",
+      "owner": "Legal/Owner",
+      "status": "PENDING_OWNER_APPROVAL"
+    }
+  ],
+  "historical_gates": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "limitations": "SQL design and concurrency mapping rehearsal are not actual operator migration, production transaction-ID fix, business policy or release authorization"
+}
