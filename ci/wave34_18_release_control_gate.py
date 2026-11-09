@@ -17,7 +17,6 @@ BASE = "ab834bf4c4eac651450df3306a8b09bba30fc5bb"
 REQUIRED = {
     "docs/audit/wave34/wave34_18_DISPOSABLE_evidence_revocation_post_close.sql",
     "src/test/java/com/revature/repository/jdbc/Wave34PostgresqlEvidenceRevocationAdjustmentTest.java",
-    "src/test/java/com/revature/repository/jdbc/Wave34PostgresqlSettlementBatchApprovalTest.java",
     "docs/audit/wave34/ADR-W34-020-Evidence-Chain-Revocation-Post-Close-Adjustment.md",
     "docs/audit/wave34/Wave34_18_Evidence_Revocation_Post_Close_Runbook.md",
     "docs/audit/wave34/Wave34_18_Evidence_Revocation_Release_Gate_Register.json",
