@@ -147,7 +147,7 @@ def static():
     if len(pva) != 16 or any(x.get("status") != "NOT_RUN_REAL_PROVIDER" for x in pva):
         raise RuntimeError("real provider tests improperly marked passed")
     approvers = register.get("approvals", [])
-    if len(approvers) != 7 or any(x.get("status") != "PENDING" for x in approvers):
+    if len(approvers) != 8 or any(x.get("status") != "PENDING" for x in approvers):
         raise RuntimeError("independent approvals falsely recorded")
     history = register.get("historical_registers", {})
     a, b = history.get("stage27", {}), history.get("phase16", {})
