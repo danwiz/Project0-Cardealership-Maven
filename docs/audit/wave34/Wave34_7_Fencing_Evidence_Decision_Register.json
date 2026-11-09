@@ -1,0 +1,255 @@
+{
+  "milestone": "WAVE34.7",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "e2b55f30836d99fe81b03254a0b42e533f8e5fa5",
+  "release_disposition": "NO-GO",
+  "scope": "DISPOSABLE_POSTGRESQL16_COOPERATIVE_WRITER_FENCING_ONLY",
+  "invariants": {
+    "protected_master_modified": false,
+    "runtime_source_changed": false,
+    "production_schema_migrated": false,
+    "production_writer_fenced": false,
+    "real_provider_authenticated": false,
+    "real_funds_processed": false,
+    "app_schema_version": 5
+  },
+  "test_targets": {
+    "full": {
+      "methods": 396,
+      "classes": 113,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "characterized_tests": [
+    {
+      "id": "W347-01",
+      "method": "committedFreezeDeniesStaleAndFrozenWritersUntilNewEpochIsOpened",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W347-02",
+      "method": "activeWriterShareLockPreventsFenceCommitUntilWriterCompletes",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W347-03",
+      "method": "abortedOperatorFreezeRollsBackEpochAndPreservesLedgerDigest",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "provider_acceptance": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "cutover_fencing_gates": [
+    {
+      "id": "FENCE-01",
+      "title": "Independent authenticated epoch issuer",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "FENCE-02",
+      "title": "All-writer storage-layer fencing",
+      "status": "SYNTHETIC_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "FENCE-03",
+      "title": "Transaction drain with committed freeze barrier",
+      "status": "SYNTHETIC_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "FENCE-04",
+      "title": "Quorum leader isolation and client routing",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "FENCE-05",
+      "title": "Signed snapshot, LSN/timeline and provenance manifest",
+      "status": "SYNTHETIC_LOCAL_HASH_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "FENCE-06",
+      "title": "Business reconciliation and reference integrity",
+      "status": "SYNTHETIC_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "FENCE-07",
+      "title": "Money, refund/chargeback, outbox policies",
+      "status": "BLOCKED_OWNER",
+      "approved_for_production": false
+    },
+    {
+      "id": "FENCE-08",
+      "title": "Independent merchant/provider PVA-01..16",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "FENCE-09",
+      "title": "Privileged migration and recovery rehearsal",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "FENCE-10",
+      "title": "AppSec/DBA/QA/legal/finance independent approvals",
+      "status": "PENDING",
+      "approved_for_production": false
+    },
+    {
+      "id": "FENCE-11",
+      "title": "SRE production failover RPO/RTO and canary",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "FENCE-12",
+      "title": "Historical release gate disposition and owner GO",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "decision_owners": [
+    {
+      "owner": "Owner/release",
+      "signoff": "PENDING"
+    },
+    {
+      "owner": "DBA/privileged migration",
+      "signoff": "PENDING"
+    },
+    {
+      "owner": "AppSec/independent identity",
+      "signoff": "PENDING"
+    },
+    {
+      "owner": "Finance/payments",
+      "signoff": "PENDING"
+    },
+    {
+      "owner": "QA",
+      "signoff": "PENDING"
+    },
+    {
+      "owner": "SRE/quorum recovery",
+      "signoff": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "signoff": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "evidence_manifest_contract": {
+    "generated_by": "Wave34PostgresqlWriterFencingRecoveryTest",
+    "storage": "target/wave34-7-evidence/*.json",
+    "expected_scenarios": [
+      "committed-freeze",
+      "writer-drain-barrier",
+      "aborted-operator-recovery"
+    ],
+    "fields": [
+      "scenario",
+      "head_sha",
+      "fixture",
+      "release",
+      "epoch",
+      "mode",
+      "schema_version",
+      "synthetic_postings",
+      "synthetic_amount_paid",
+      "synthetic_balance",
+      "ledger_sha256",
+      "production_writer_fenced",
+      "production_authorized"
+    ],
+    "signed": false,
+    "independent_timestamp": false,
+    "production_source": false
+  },
+  "caveat": "Client-settable GUC and test DBA permissions are not a real unspoofable producer identity or leader fence. All production cutover gates remain unapproved."
+}
