@@ -1,0 +1,263 @@
+{
+  "milestone": "WAVE34.10",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "0ddb87448705f3d091693e508b730b21348fbfc2",
+  "release_disposition": "NO-GO",
+  "scope": "IN_PROCESS_JCA_P256_CONTRACT_TEST_ONLY",
+  "invariants": {
+    "protected_master_modified": false,
+    "app_runtime_modified": false,
+    "production_schema_migrated": false,
+    "real_issuer_operated": false,
+    "nonexportable_sender_key_attested": false,
+    "durable_replay_protection": false,
+    "production_fencing_verified": false,
+    "provider_integrated": false,
+    "real_payments_processed": false,
+    "app_schema_version": 5
+  },
+  "test_targets": {
+    "full": {
+      "methods": 406,
+      "classes": 116,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W3410-01",
+      "method": "authenticIssuerSignatureRequiredAndTamperedLeaseClaimsRejected",
+      "scenario": "issuer-signature-and-tamper",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3410-02",
+      "method": "senderProofIsBoundToWriterKeyAndExactRequestFields",
+      "scenario": "sender-proof-request-binding",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3410-03",
+      "method": "exactChallengeReplayAndConcurrentDoubleAuthorizationAreRejected",
+      "scenario": "concurrent-replay-rejection",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3410-04",
+      "method": "expiryRevocationIssuerRotationEpochAndAudienceFailClosed",
+      "scenario": "expiry-revocation-rotation",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-10-evidence",
+    "scenarios": [
+      "issuer-signature-and-tamper",
+      "sender-proof-request-binding",
+      "concurrent-replay-rejection",
+      "expiry-revocation-rotation"
+    ],
+    "signed": false,
+    "independent_timestamp": false,
+    "fields": [
+      "scenario",
+      "source_head",
+      "fixture",
+      "signature_algorithm",
+      "synthetic_accepted_requests",
+      "external_issuer_operated",
+      "durable_replay_store",
+      "real_payment_processed",
+      "production_authorized",
+      "release_disposition"
+    ]
+  },
+  "gates": [
+    {
+      "id": "ISSUER-01",
+      "title": "Independent issuer and managed signing key",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "ISSUER-02",
+      "title": "P-256 cryptographic lease-claim signature",
+      "status": "SYNTHETIC_JCA_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "ISSUER-03",
+      "title": "Sender proof bound to exact request",
+      "status": "SYNTHETIC_JCA_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "ISSUER-04",
+      "title": "Durable JTI/nonce replay protection",
+      "status": "IN_MEMORY_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "ISSUER-05",
+      "title": "Key/lease revocation and rotation",
+      "status": "SYNTHETIC_JCA_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "ISSUER-06",
+      "title": "Authenticated issuer to PG principal integration",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "ISSUER-07",
+      "title": "Distributed stale-primary/quorum fencing",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "ISSUER-08",
+      "title": "Real payment-provider acceptance PVA-01..16",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "ISSUER-09",
+      "title": "Legacy PAY allocator and provider idempotency",
+      "status": "OPEN_DEFECT",
+      "approved_for_production": false
+    },
+    {
+      "id": "ISSUER-10",
+      "title": "Currency units and financial posting policy",
+      "status": "BLOCKED_OWNER",
+      "approved_for_production": false
+    },
+    {
+      "id": "ISSUER-11",
+      "title": "Production migration, recovery and RPO/RTO",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "ISSUER-12",
+      "title": "Independent approvals / Stage27 and Phase16",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "external_provider_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec/independent issuer",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Payments/finance",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "SRE/quorum HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "limitations": "ECDSA and proof-of-possession modeled with in-process test-generated keys, ephemeral challenge map and simulated role claims; no secure independent issuer, durable distributed replay store, production identity, merchant or financial write."
+}
