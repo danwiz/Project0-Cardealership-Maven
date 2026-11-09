@@ -1,0 +1,267 @@
+{
+  "milestone": "WAVE34.13",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "96cb1efb992d4ef40d4ef3eb2ab0bed5706fcf52",
+  "release_disposition": "NO-GO",
+  "scope": "IN_PROCESS_FAKE_PROVIDER_AND_DISPOSABLE_POSTGRESQL16_ONLY",
+  "invariants": {
+    "protected_master_modified": false,
+    "payment_runtime_modified": false,
+    "production_schema_migrated": false,
+    "real_provider_contacted": false,
+    "external_capture_requested": false,
+    "independent_provider_trust_verified": false,
+    "financial_policy_approved": false,
+    "production_role_deployed": false,
+    "real_funds_processed": false,
+    "app_schema_version": 5
+  },
+  "test_targets": {
+    "full": {
+      "methods": 418,
+      "classes": 119,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W3413-01",
+      "method": "missingCaptureStatusIsHeldUntilFreshSignedProviderQueryConfirmsCapture",
+      "scenario": "unknown-ack-read-only-provider-query",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3413-02",
+      "method": "pendingUnknownDeclinedRefundedOrDisputedStatusNeverPostsAsNewPayment",
+      "scenario": "noncaptured-and-reversal-hold",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3413-03",
+      "method": "forgedOrMismatchedProviderClaimsCannotAuthorizeLedgerPosting",
+      "scenario": "signed-identity-and-financial-claims",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3413-04",
+      "method": "concurrentCaptureReplayAndConflictingProviderIdsFailClosedWithAtomicRollback",
+      "scenario": "concurrent-provider-replay-and-rollback",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-13-evidence",
+    "scenarios": [
+      "unknown-ack-read-only-provider-query",
+      "noncaptured-and-reversal-hold",
+      "signed-identity-and-financial-claims",
+      "concurrent-provider-replay-and-rollback"
+    ],
+    "signed": false,
+    "independent_timestamp": false,
+    "fields": [
+      "scenario",
+      "source_head",
+      "fixture",
+      "schema_version",
+      "synthetic_captures",
+      "synthetic_postings",
+      "synthetic_balance",
+      "ledger_digest_sha256",
+      "real_provider_contacted",
+      "external_charge_reissued",
+      "independent_provider_trust_verified",
+      "financial_policy_approved",
+      "production_authorized",
+      "release_disposition"
+    ]
+  },
+  "gates": [
+    {
+      "id": "PROVIDER-01",
+      "title": "Independently operated real provider status endpoint",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "PROVIDER-02",
+      "title": "Merchant account and signature authority",
+      "status": "IN_PROCESS_FAKE_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "PROVIDER-03",
+      "title": "Signed captured state and exact amount/ownership",
+      "status": "IN_PROCESS_FAKE_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "PROVIDER-04",
+      "title": "Pending/unknown/reversed financial HOLD policy",
+      "status": "SYNTHETIC_TEST_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "PROVIDER-05",
+      "title": "Atomic provider receipt and local posting",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "PROVIDER-06",
+      "title": "Provider transaction and request idempotency",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "PROVIDER-07",
+      "title": "Real capture/settlement and lost provider ACK",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "PROVIDER-08",
+      "title": "Refund/dispute/chargeback accounting approvals",
+      "status": "BLOCKED_FINANCE",
+      "approved_for_production": false
+    },
+    {
+      "id": "PROVIDER-09",
+      "title": "Minor units, currency and finance/owner consent",
+      "status": "BLOCKED_OWNER",
+      "approved_for_production": false
+    },
+    {
+      "id": "PROVIDER-10",
+      "title": "Legacy PAY ID allocator and versioned migration",
+      "status": "OPEN_DEFECT",
+      "approved_for_production": false
+    },
+    {
+      "id": "PROVIDER-11",
+      "title": "Non-bypassable DB trust, outbox, quorum and restore",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "PROVIDER-12",
+      "title": "Independent owner/DBA/AppSec/QA/SRE/legal Stage27 GO",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "external_provider_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec/real merchant issuer",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Payments/finance",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "SRE/HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "limitations": "Provider status and ECDSA key are generated inside JUnit; fake read-only query does not authenticate a real merchant or prove settlement. The CI database connection is privileged, currency minor units are synthetic, and the legacy payment ID allocator remains defective."
+}
