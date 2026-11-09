@@ -138,7 +138,14 @@ class Wave34PostgresqlEvidenceRevocationAdjustmentTest {
             assertEquals(OLD_CLOSE,f.periodDigest(PRIOR));
             assertEquals("OPEN",f.periodState(CURRENT));
 
-            Request backdated=correction.withPeriods(PRIOR,PRIOR);
+            // A changed replay of an existing ID must fail before SQL.
+            Request changedReplay=correction.withPeriods(PRIOR,PRIOR);
+            assertThrows(SecurityException.class,()->
+                    f.post(changedReplay,f.review(changedReplay,false)));
+
+            // A distinct NEW correction must reach the SQL closed-period gate.
+            Request backdated=f.request("ADJ-02","FAKE-REF-02",5)
+                    .withPeriods(PRIOR,PRIOR);
             assertSqlState("42501",()->f.post(backdated,f.review(backdated,false)));
             assertEquals(1,f.adjustments());
             assertEquals(1,f.chainRows());
@@ -147,7 +154,7 @@ class Wave34PostgresqlEvidenceRevocationAdjustmentTest {
             // finance close and NOT an approved production role.
             f.raw("UPDATE w3418_periods SET state='CLOSED',close_digest='"+ZEROS+"'"
                     +" WHERE period_id='"+CURRENT+"'");
-            Request next=f.request("ADJ-02","FAKE-REF-02",5);
+            Request next=f.request("ADJ-03","FAKE-REF-03",5);
             assertSqlState("42501",()->f.post(next,f.review(next,false)));
             assertEquals("CLOSED",f.periodState(CURRENT));
             assertEquals(OLD_CLOSE,f.periodDigest(PRIOR));
