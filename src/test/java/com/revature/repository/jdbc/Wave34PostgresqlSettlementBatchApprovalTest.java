@@ -155,6 +155,22 @@ class Wave34PostgresqlSettlementBatchApprovalTest {
             assertEquals(6,f.sources());
             assertEquals(2,f.audit());
             assertEquals(194L,f.net());
+
+            // A non-batch unique conflict must fail closed. Generic ON CONFLICT
+            // may skip the insert, but only an exact already-committed batch may
+            // be treated as an idempotent retry.
+            Batch another=f.batch("BATCH-03",100,3,97,97,"BANK-REF-03");
+            Approval makerReused=f.approveBy("MAKER","maker",another,
+                    original.maker.id,NOW.plusSeconds(600),f.makerKey);
+            Batch foreignApproval=new Batch(another.id,another.provider,
+                    another.bank,another.gl,makerReused,another.checker,
+                    another.reviewDigest);
+            assertThrows(SecurityException.class,()->
+                    f.apply(foreignApproval,false));
+            assertEquals(2,f.reviews());
+            assertEquals(6,f.sources());
+            assertEquals(2,f.audit());
+            assertEquals(194L,f.net());
             f.assertLegacyUntouched();
             f.evidence("concurrent-replay-and-bank-reference");
         }
@@ -465,7 +481,7 @@ class Wave34PostgresqlSettlementBatchApprovalTest {
                     +"(batch_id,currency,provider_gross_minor,provider_fee_minor,"
                     +"expected_net_minor,maker_id,checker_id,maker_approval_id,"
                     +"checker_approval_id,review_digest) VALUES(?,'USD',?,?,?,?,?,?,?,?)"
-                    +" ON CONFLICT (batch_id) DO NOTHING")) {
+                    +" ON CONFLICT DO NOTHING")) {
                 p.setString(1,b.id);
                 p.setLong(2,b.provider.gross);
                 p.setLong(3,b.provider.fee);
