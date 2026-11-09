@@ -13,7 +13,7 @@ import subprocess
 import sys
 from xml.etree import ElementTree as ET
 
-BASE = "003b4589020a1b5c762036cbca06d08ad7528959"
+BASE = "3c77a609f3907d6ff153cea875abd76eaf4755aa"
 REQUIRED = {
     "docs/audit/wave34/wave34_12_DISPOSABLE_restricted_intents.sql",
     "src/test/java/com/revature/repository/jdbc/Wave34PostgresqlRestrictedRecoveryTest.java",
