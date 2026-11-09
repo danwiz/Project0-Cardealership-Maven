@@ -78,8 +78,8 @@ class Wave34PostgresqlExceptionSuspenseCloseTest {
             assertEquals(2,f.events());
             assertEquals(4,f.lines());
             assertEquals(0L,f.suspense());
-            assertEquals(40L,f.debits());
-            assertEquals(40L,f.credits());
+            assertEquals(80L,f.debits());
+            assertEquals(80L,f.credits());
 
             assertEquals(PERIOD,f.closePeriod(f.closeReview()));
             assertEquals("CLOSED",f.periodState());
