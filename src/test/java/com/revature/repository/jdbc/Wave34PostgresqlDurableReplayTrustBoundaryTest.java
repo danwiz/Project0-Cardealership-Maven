@@ -201,7 +201,7 @@ class Wave34PostgresqlDurableReplayTrustBoundaryTest {
         }
     }
 
-    private interface SqlCall { void call() throws SQLException; }
+    private interface SqlCall { void call() throws Exception; }
     private static void assertSqlState(String state, SqlCall call, String message) {
         SQLException failed = assertThrows(SQLException.class, call::call, message);
         assertEquals(state, failed.getSQLState());
@@ -426,21 +426,30 @@ class Wave34PostgresqlDurableReplayTrustBoundaryTest {
                         claim.setString(6,sha(req.requestClaims()));
                         assertEquals(1,claim.executeUpdate());
                     }
+                    int cumulative, resultingBalance;
                     try (PreparedStatement plan=c.prepareStatement(
                             "UPDATE payment_plans SET amount_paid=amount_paid+1,"
-                            +"balance=balance-1 WHERE ownership_id=?")) {
+                            +"balance=balance-1 WHERE ownership_id=?"
+                            +" RETURNING amount_paid,balance")) {
                         plan.setLong(1,ownership);
-                        assertEquals(1,plan.executeUpdate());
+                        try (ResultSet updated=plan.executeQuery()) {
+                            assertTrue(updated.next());
+                            cumulative=updated.getInt(1);
+                            resultingBalance=updated.getInt(2);
+                            assertFalse(updated.next());
+                        }
                     }
                     try (PreparedStatement ledger=c.prepareStatement(
                             "INSERT INTO payment_transactions"
                             +"(transaction_id,customer_name,ownership_id,contract_id,"
                             +"amount,cumulative_paid,resulting_balance,recorded_at)"
-                            +" VALUES(?,'buyer',?,'ACQ-000001',1,1,23999,?)")) {
+                            +" VALUES(?,'buyer',?,'ACQ-000001',1,?,?,?)")) {
                         ledger.setString(1,req.transactionId);
                         ledger.setLong(2,injectBadForeignKey?ownership+999999:ownership);
-                        ledger.setTimestamp(3,Timestamp.from(
-                                Instant.parse("2026-01-01T00:00:00Z")));
+                        ledger.setInt(3,cumulative);
+                        ledger.setInt(4,resultingBalance);
+                        ledger.setTimestamp(5,Timestamp.from(
+                                Instant.parse("2026-01-01T00:00:00Z").plusSeconds(cumulative)));
                         assertEquals(1,ledger.executeUpdate());
                     }
                     c.commit();
