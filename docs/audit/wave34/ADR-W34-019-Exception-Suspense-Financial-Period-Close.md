@@ -56,3 +56,15 @@ Expected test roster: **434 methods / 123 classes** on both Java 11 and Java 17,
 - Source rights, architect/DBA/AppSec/Finance/QA/SRE/legal/owner signoffs and historical Stage27 14-gate vs Phase16 17/12 registers remain separate and unresolved.
 
 **Decision: PROPOSED REHEARSAL ONLY / PRODUCTION NO-GO.** No merge, deployment, real payment, settlement close, period close, new production DB migration or finance approval is authorized by this milestone.
+
+## Inherited Wave34.16 replay-regression repair — review-only source expansion
+
+At the initial Wave34.17 commit \`b78543deb199b2a5d6f0a3a0d58965a42ede0ca7\`, workflow [#42709465166](https://github.com/danwiz/Project0-Cardealership-Maven/actions/runs/42709465166) recorded **two Java 11 full-suite failures** in the inherited \`Wave34PostgresqlSettlementBatchApprovalTest.concurrentReplayIsIdempotentAndBankReferenceCannotBeReused\` while Java17 passed. Both failures were PostgreSQL SQLSTATE 23505 on unique \`w3416_batch_reviews_maker_approval_id_key\`, within four concurrent exact-same-batch submissions. All four **new** W3417 tests passed in both attempts. The defect is tracked in [GitHub issue #51](https://github.com/danwiz/Project0-Cardealership-Maven/issues/51).
+
+Inspection found that the synthetic batch insertion targeted \`ON CONFLICT (batch_id) DO NOTHING\`, while the same canonical replay reuses a maker approval UUID unique on a separate constraint. A concurrency interleaving can surface the *other* unique index and abort the entire run. Wave34.17 explicitly expands from seven to **eight** review-only changed files solely to adjust that **inherited test fixture**:
+
+- Use \`ON CONFLICT DO NOTHING\` across all unique indexes, **then require a row with the identical batch ID and exact stored digest, maker/checker approval IDs and financial values** before returning an idempotent result.
+- Add a negative check within the existing W34.16 concurrency JUnit method: another batch presenting the same maker approval ID must fail closed with no new batch, bank evidence or synthetic audit entry. The intentional different-batch bank-reference violation remains a 23505 test.
+- Add the inherited test file to the exact-source custody allowlist and a static regression contract guard. The production payment processor, schema migrator, original W34.16 SQL fixture and protected branch stay frozen. Original W34.16 PR #49 remains unchanged.
+
+This is a synthetic fixture correctness repair, **not** a fix to production payment/provider idempotency or independent finance authorization. Preserve failed job attempts and all exact-commit CI evidence. A rerun or green suite does not establish production safety.
