@@ -1,0 +1,267 @@
+{
+  "milestone": "WAVE34.14",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "bf4c4a1d6632c374750bf7949d3a5c19ca4ad3c5",
+  "release_disposition": "NO-GO",
+  "scope": "IN_PROCESS_FAKE_SETTLEMENT_DISPOSABLE_PG16_REVERSAL_JOURNAL",
+  "invariants": {
+    "protected_master_modified": false,
+    "runtime_payment_code_modified": false,
+    "production_schema_migrated": false,
+    "real_provider_contacted": false,
+    "independent_finance_approval_verified": false,
+    "real_refund_or_chargeback_executed": false,
+    "production_immutability_verified": false,
+    "real_funds_processed": false,
+    "app_schema_version": 5
+  },
+  "test_targets": {
+    "full": {
+      "methods": 422,
+      "classes": 120,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W3414-01",
+      "method": "settledCapturePartialRefundAndChargebackCreateBalancedAppendOnlyJournal",
+      "scenario": "capture-settlement-refund-chargeback",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3414-02",
+      "method": "missingOutOfOrderAndOverReversalEventsRemainOnFinancialHold",
+      "scenario": "out-of-order-and-over-reversal-hold",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3414-03",
+      "method": "forgedEventExpiredApprovalAndReusedAuthorizationCannotPost",
+      "scenario": "forgery-approval-expiry-and-reuse",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3414-04",
+      "method": "simultaneousReplayCommitsOnceAndFailedJournalFKRollsBackState",
+      "scenario": "concurrency-and-atomic-reversal-rollback",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-14-evidence",
+    "scenarios": [
+      "capture-settlement-refund-chargeback",
+      "out-of-order-and-over-reversal-hold",
+      "forgery-approval-expiry-and-reuse",
+      "concurrency-and-atomic-reversal-rollback"
+    ],
+    "signed": false,
+    "independent_timestamp": false,
+    "fields": [
+      "scenario",
+      "source_head",
+      "fixture",
+      "schema_version",
+      "synthetic_provider_events",
+      "synthetic_journal_entries",
+      "synthetic_net_minor",
+      "legacy_payment_entries",
+      "ledger_digest_sha256",
+      "external_provider_verified",
+      "independent_finance_approval_verified",
+      "real_refund_or_chargeback_executed",
+      "production_immutability_verified",
+      "production_authorized",
+      "release_disposition"
+    ]
+  },
+  "gates": [
+    {
+      "id": "SETTLE-01",
+      "title": "Real independent provider signing, merchant API",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "SETTLE-02",
+      "title": "Approved double-entry chart of accounts",
+      "status": "NOT_APPROVED",
+      "approved_for_production": false
+    },
+    {
+      "id": "SETTLE-03",
+      "title": "Currency/refund/chargeback monetary policy",
+      "status": "NOT_APPROVED",
+      "approved_for_production": false
+    },
+    {
+      "id": "SETTLE-04",
+      "title": "Independent signed finance dual control",
+      "status": "IN_PROCESS_TEST_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "SETTLE-05",
+      "title": "Actual provider state events and order",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "SETTLE-06",
+      "title": "Durable event replay/ordering in one PG16 database",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "SETTLE-07",
+      "title": "Append-only journal plus independent custody",
+      "status": "SYNTHETIC_TRIGGER_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "SETTLE-08",
+      "title": "Transactional outbox and GL settlement reconciliation",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "SETTLE-09",
+      "title": "Legacy PAY allocator fix and production migration",
+      "status": "OPEN_DEFECT",
+      "approved_for_production": false
+    },
+    {
+      "id": "SETTLE-10",
+      "title": "Real provider PVA-01..16, RPO/RTO, quorum HA",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "SETTLE-11",
+      "title": "Independent AppSec/DBA/finance/QA/SRE/legal reviews",
+      "status": "PENDING",
+      "approved_for_production": false
+    },
+    {
+      "id": "SETTLE-12",
+      "title": "Historical Stage27 and Phase16 release gates",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "external_provider_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA/ledger owner",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec/real merchant issuer",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Payments/finance/controller",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "SRE/HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "limitations": "In-process fake provider and finance signatures, illustrative minor-unit net ledger, privileged CI database owner and no real merchant/settlement/refund/chargeback; append-only trigger can be bypassed by privileged DDL and does not represent approved double-entry accounting."
+}
