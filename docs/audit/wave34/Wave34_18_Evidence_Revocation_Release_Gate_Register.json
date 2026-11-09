@@ -1,0 +1,297 @@
+{
+  "milestone": "WAVE34.18",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "ab834bf4c4eac651450df3306a8b09bba30fc5bb",
+  "release_disposition": "NO-GO",
+  "scope": "DISPOSABLE_POSTGRESQL16_HASH_CHAIN_REVOCATION_POST_CLOSE_ONLY",
+  "invariants": {
+    "protected_master_modified": false,
+    "production_payment_code_modified": false,
+    "production_schema_migrated": false,
+    "independent_evidence_custody_verified": false,
+    "real_approver_identity_verified": false,
+    "production_revocation_integrated": false,
+    "authorized_real_prior_period_adjustment": false,
+    "real_funds_moved": false,
+    "app_schema_version": 5
+  },
+  "test_targets": {
+    "full": {
+      "methods": 438,
+      "classes": 124,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W3418-01",
+      "method": "sequentialEvidenceHashChainVerifiesAndDisallowsHistoricalRewrite",
+      "scenario": "hash-chain-and-immutable-historical-period",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3418-02",
+      "method": "revokedOverLimitExpiredOrForgedApprovalsCannotPostAdjustment",
+      "scenario": "revocation-limit-and-signature-hold",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3418-03",
+      "method": "postCloseCorrectionUsesOnlyOpenCurrentPeriodAndPreservesOldClose",
+      "scenario": "prior-period-referenced-current-only-adjustment",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3418-04",
+      "method": "concurrentExactReplayPostsOnceAndCrossAdjustmentApprovalReuseFailsClosed",
+      "scenario": "concurrent-replay-and-cross-event-approval",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-18-evidence",
+    "scenarios": [
+      "hash-chain-and-immutable-historical-period",
+      "revocation-limit-and-signature-hold",
+      "prior-period-referenced-current-only-adjustment",
+      "concurrent-replay-and-cross-event-approval"
+    ],
+    "signed": false,
+    "externally_notarized": false,
+    "fields": [
+      "scenario",
+      "source_head",
+      "fixture",
+      "schema_version",
+      "synthetic_adjustments",
+      "synthetic_chain_entries",
+      "synthetic_cursor_sequence",
+      "chain_valid",
+      "chain_tip_sha256",
+      "historical_close_unchanged",
+      "legacy_payment_entries",
+      "independent_evidence_custody_verified",
+      "real_approver_identity_verified",
+      "production_revocation_integrated",
+      "authorized_real_prior_period_adjustment",
+      "production_authorized",
+      "release_disposition"
+    ]
+  },
+  "gates": [
+    {
+      "id": "EVID-01",
+      "title": "Independent original provider bank and GL evidence",
+      "status": "NOT_VERIFIED",
+      "approved_for_production": false
+    },
+    {
+      "id": "EVID-02",
+      "title": "External anchored witnessed hash chain tip",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "EVID-03",
+      "title": "Production WORM ledger custody separated from DB owner",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "EVID-04",
+      "title": "Real identity-bound finance maker checker and limits",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "EVID-05",
+      "title": "Revocation replay guard enforced by restricted service",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "EVID-06",
+      "title": "Previous period immutable and current posting open",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "EVID-07",
+      "title": "Controller-approved prior-period double-entry correction",
+      "status": "NOT_APPROVED",
+      "approved_for_production": false
+    },
+    {
+      "id": "EVID-08",
+      "title": "Real PVA provider acceptance and HA/restore",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "EVID-09",
+      "title": "Legacy PAY ID and public payment API remediation",
+      "status": "OPEN_DEFECT",
+      "approved_for_production": false
+    },
+    {
+      "id": "EVID-10",
+      "title": "Stress verification for inherited issue #51",
+      "status": "OPEN_ISSUE",
+      "approved_for_production": false
+    },
+    {
+      "id": "EVID-11",
+      "title": "Owner Controller DBA AppSec QA SRE Legal reviews",
+      "status": "PENDING",
+      "approved_for_production": false
+    },
+    {
+      "id": "EVID-12",
+      "title": "Historical Stage27 Phase16 independent release signoffs",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "external_provider_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Controller/finance",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Treasury/bank owner",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Merchant/payments owner",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA/SRE/HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "inherited_issue": {
+    "number": 51,
+    "url": "https://github.com/danwiz/Project0-Cardealership-Maven/issues/51",
+    "status": "OPEN_STRESS_VALIDATION_PENDING",
+    "repaired_test_source_frozen": true
+  },
+  "limitations": "Source references and ephemeral maker/checker test keys all generated inside one JUnit process. The hash tip is not externally anchored; privileged PostgreSQL CI owner can modify both chain and cursor; the adjustment is metadata only, not an approved double-entry accounting journal or real closed-period correction.",
+  "inherited_gl_replay_repair": {
+    "issue_url": "https://github.com/danwiz/Project0-Cardealership-Maven/issues/53",
+    "source_file": "src/test/java/com/revature/repository/jdbc/Wave34PostgresqlBalancedGlReconciliationTest.java",
+    "observed_run_id": 42714152238,
+    "observed_sqlstate": "23505",
+    "constraint": "w3415_gl_events_provider_event_id_key",
+    "scope": "REVIEW_ONLY_SYNTHETIC_TEST",
+    "status": "PENDING_EXACT_SHA_CI",
+    "repair": "ON_CONFLICT_DO_NOTHING_PLUS_EXACT_EVENT_ID_SEQUENCE_AMOUNT_DIGEST_APPROVAL_READBACK",
+    "production_idempotency_fixed": false,
+    "release_approved": false
+  },
+  "initial_wave34_18_failure": {
+    "run_id": 42714152238,
+    "reason": "W3418-03 changed already-stored adjustment ID before SQL closed-period check",
+    "remediation": "separate changed replay rejection from distinct backdated new adjustment",
+    "status": "PENDING_EXACT_SHA_CI"
+  }
+}

@@ -206,7 +206,10 @@ class Wave34PostgresqlBalancedGlReconciliationTest {
             Event different = f.event("refund10", 4, "REFUNDED", 10);
             Approval reused = f.approveBy(different, approval.id,
                     NOW.plusSeconds(300), f.finance);
-            assertSqlState("23505", () -> f.apply(different, reused, false));
+            // Generic ON CONFLICT can suppress a different event's approval
+            // UUID collision, but exact event-ID readback must fail closed.
+            assertThrows(SecurityException.class, () ->
+                    f.apply(different, reused, false));
             assertEquals(3, f.events());
             assertEquals(6, f.lines());
 
@@ -427,7 +430,7 @@ class Wave34PostgresqlBalancedGlReconciliationTest {
                             "INSERT INTO w3415_gl_events(event_id,provider_event_id,"
                             +"sequence_no,event_kind,amount_minor,currency,"
                             +"canonical_digest,approval_id) VALUES(?,?,?,?,?,?,?,?)"
-                            +" ON CONFLICT (event_id) DO NOTHING")) {
+                            +" ON CONFLICT DO NOTHING")) {
                         p.setString(1,e.id);
                         p.setString(2,"provider-"+e.id);
                         p.setLong(3,e.sequence);
