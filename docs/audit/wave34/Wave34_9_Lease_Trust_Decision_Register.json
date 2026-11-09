@@ -1,79 +1,19 @@
 {
   "milestone": "WAVE34.9",
   "repository": "danwiz/Project0-Cardealership-Maven",
-  "source_parent_sha": "68957fce394b170a820358fa2e50c98b28333b3d",
   "release_disposition": "NO-GO",
   "scope": "DISPOSABLE_PG16_BEARER_LEASE_LIFECYCLE",
   "invariants": {
     "protected_master_modified": false,
     "app_runtime_modified": false,
-    "schema_version": 5,
     "production_role_provisioning": false,
     "production_schema_migration": false,
     "real_issuer_verified": false,
     "stolen_bearer_replay_prevented": false,
     "production_fencing_verified": false,
     "real_provider_authenticated": false,
-    "real_funds_processed": false
-  },
-  "qa_targets": {
-    "full": {
-      "methods": 402,
-      "classes": 115,
-      "status": "PENDING_EXACT_SHA_CI"
-    },
-    "security": {
-      "methods": 151,
-      "classes": 64,
-      "status": "PENDING_EXACT_SHA_CI"
-    }
-  },
-  "tests": [
-    {
-      "id": "W349-01",
-      "method": "issuerCanGrantAndRevokeLeaseButWriterCannotReuseRevokedToken",
-      "status": "PENDING_EXACT_SHA_CI",
-      "evidence": "TEST_ONLY"
-    },
-    {
-      "id": "W349-02",
-      "method": "expiredOrOtherPrincipalLeaseFailsAndRestrictedRolesCannotEscalate",
-      "status": "PENDING_EXACT_SHA_CI",
-      "evidence": "TEST_ONLY"
-    },
-    {
-      "id": "W349-03",
-      "method": "freezeDrainsInFlightLeaseAndRequiresNewEpochTokenAfterReopen",
-      "status": "PENDING_EXACT_SHA_CI",
-      "evidence": "TEST_ONLY"
-    }
-  ],
-  "manifests": {
-    "directory": "target/wave34-9-evidence",
-    "scenarios": [
-      "lease-issuance-revocation",
-      "expiry-and-role-denials",
-      "epoch-cutover-stale-token"
-    ],
-    "signed": false,
-    "independent_timestamp": false,
-    "fields": [
-      "scenario",
-      "head_sha",
-      "fixture",
-      "authorization_basis",
-      "release",
-      "epoch",
-      "mode",
-      "schema_version",
-      "synthetic_postings",
-      "synthetic_balance",
-      "ledger_sha256",
-      "real_external_issuer_verified",
-      "stolen_bearer_replay_prevented",
-      "production_fencing_verified",
-      "production_authorized"
-    ]
+    "real_funds_processed": false,
+    "app_schema_version": 5
   },
   "gates": [
     {
@@ -149,7 +89,80 @@
       "approved_for_production": false
     }
   ],
-  "provider_acceptance": [
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "limitations": "Tests use DB-local test role to mint a client-held UUID; not independent issuer. The privileged test DB owner can bypass controls. A stolen bearer remains replayable by same principal until revoked or expired.",
+  "parent_head_sha": "68957fce394b170a820358fa2e50c98b28333b3d",
+  "test_targets": {
+    "full": {
+      "methods": 402,
+      "classes": 115,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W349-01",
+      "method": "issuerCanGrantAndRevokeLeaseButWriterCannotReuseRevokedToken",
+      "status": "PENDING_EXACT_SHA_CI",
+      "evidence": "TEST_ONLY"
+    },
+    {
+      "id": "W349-02",
+      "method": "expiredOrOtherPrincipalLeaseFailsAndRestrictedRolesCannotEscalate",
+      "status": "PENDING_EXACT_SHA_CI",
+      "evidence": "TEST_ONLY"
+    },
+    {
+      "id": "W349-03",
+      "method": "freezeDrainsInFlightLeaseAndRequiresNewEpochTokenAfterReopen",
+      "status": "PENDING_EXACT_SHA_CI",
+      "evidence": "TEST_ONLY"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-9-evidence",
+    "scenarios": [
+      "lease-issuance-revocation",
+      "expiry-and-role-denials",
+      "epoch-cutover-stale-token"
+    ],
+    "signed": false,
+    "independent_timestamp": false,
+    "fields": [
+      "scenario",
+      "head_sha",
+      "fixture",
+      "authorization_basis",
+      "release",
+      "epoch",
+      "mode",
+      "schema_version",
+      "synthetic_postings",
+      "synthetic_balance",
+      "ledger_sha256",
+      "real_external_issuer_verified",
+      "stolen_bearer_replay_prevented",
+      "production_fencing_verified",
+      "production_authorized"
+    ]
+  },
+  "external_provider_cases": [
     {
       "id": "PVA-01",
       "status": "NOT_RUN_REAL_PROVIDER"
@@ -215,7 +228,7 @@
       "status": "NOT_RUN_REAL_PROVIDER"
     }
   ],
-  "owner_reviews": [
+  "approvals": [
     {
       "owner": "Owner/release",
       "status": "PENDING"
@@ -244,18 +257,5 @@
       "owner": "Legal/source rights",
       "status": "PENDING"
     }
-  ],
-  "historical_registers": {
-    "stage27": {
-      "reported_total": 14,
-      "verified_closed": 0,
-      "status": "UNRECONCILED_HISTORICAL"
-    },
-    "phase16": {
-      "reported_total": 17,
-      "reported_blocking": 12,
-      "status": "UNRECONCILED_HISTORICAL"
-    }
-  },
-  "limitations": "Tests use DB-local test role to mint a client-held UUID; not independent issuer. The privileged test DB owner can bypass controls. A stolen bearer remains replayable by same principal until revoked or expired."
+  ]
 }
