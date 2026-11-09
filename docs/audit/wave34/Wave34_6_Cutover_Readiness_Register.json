@@ -1,0 +1,227 @@
+{
+  "milestone": "WAVE34.6",
+  "project": "danwiz/Project0-Cardealership-Maven",
+  "source_baseline_sha": "8f5544c6ac55015e9ff86bdd2678444e6258921d",
+  "release_disposition": "NO-GO",
+  "review_scope": "DISPOSABLE_PG16_PRE_FLIGHT_ONLY",
+  "controls": {
+    "production_migration": false,
+    "production_payment": false,
+    "real_provider_authentication": false,
+    "master_modified": false,
+    "runtime_source_changed": false,
+    "schema_version": 5
+  },
+  "qa_targets": {
+    "full": {
+      "methods": 393,
+      "classes": 112,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "synthetic_tests": [
+    {
+      "id": "W346-01",
+      "method": "mappingCoverageAndImmutableSourceDigestMustMatchBeforeSyntheticPreflight",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W346-02",
+      "method": "sourceDriftInvalidatesEarlierPassingSnapshotEvenWhenMappingIsRepaired",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W346-03",
+      "method": "failedMappingTransactionRevertsAllMappingsAndKeepsSourceSnapshotIntact",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "cutover_gates": [
+    {
+      "id": "CUT-01",
+      "name": "Source custody and rights",
+      "status": "PARTIAL_REPOSITORY_ONLY",
+      "authorized_for_production": false
+    },
+    {
+      "id": "CUT-02",
+      "name": "Monetary units and finance policy",
+      "status": "BLOCKED_OWNER",
+      "authorized_for_production": false
+    },
+    {
+      "id": "CUT-03",
+      "name": "Independent external merchant/provider trust",
+      "status": "NOT_RUN",
+      "authorized_for_production": false
+    },
+    {
+      "id": "CUT-04",
+      "name": "DBA versioned migration and restore approval",
+      "status": "NOT_RUN",
+      "authorized_for_production": false
+    },
+    {
+      "id": "CUT-05",
+      "name": "Source-to-target ledger mapping reconciliation",
+      "status": "SYNTHETIC_ONLY",
+      "authorized_for_production": false
+    },
+    {
+      "id": "CUT-06",
+      "name": "Actual writer quiescence and stale-leader fencing",
+      "status": "NOT_IMPLEMENTED",
+      "authorized_for_production": false
+    },
+    {
+      "id": "CUT-07",
+      "name": "Legacy identity and downstream API compatibility",
+      "status": "SYNTHETIC_ONLY",
+      "authorized_for_production": false
+    },
+    {
+      "id": "CUT-08",
+      "name": "Operational disaster recovery and settlement reconciliation",
+      "status": "NOT_RUN",
+      "authorized_for_production": false
+    },
+    {
+      "id": "CUT-09",
+      "name": "Supply chain and release quality",
+      "status": "PARTIAL_CI_ONLY",
+      "authorized_for_production": false
+    },
+    {
+      "id": "CUT-10",
+      "name": "Independent authority signoffs",
+      "status": "PENDING",
+      "authorized_for_production": false
+    },
+    {
+      "id": "CUT-11",
+      "name": "Controlled operator canary and measured RPO/RTO",
+      "status": "NOT_RUN",
+      "authorized_for_production": false
+    },
+    {
+      "id": "CUT-12",
+      "name": "Final Stage27 and Phase16 release disposition",
+      "status": "NO-GO",
+      "authorized_for_production": false
+    }
+  ],
+  "provider_acceptance": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "review_approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Finance/payments",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    },
+    {
+      "owner": "SRE/HA",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "scope_note": "Passing synthetic preflight is not production cutover readiness, real provider test, financial accounting validation, or release-go."
+}
