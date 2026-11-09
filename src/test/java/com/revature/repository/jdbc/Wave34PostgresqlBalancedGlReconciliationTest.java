@@ -462,8 +462,16 @@ class Wave34PostgresqlBalancedGlReconciliationTest {
                             }
                         }
                     }
-                    long previous=scalar(c,"SELECT COALESCE(MAX(sequence_no),0)"
-                            +" FROM w3415_gl_events WHERE event_id<>'"+e.id+"'");
+                    long previous;
+                    try(PreparedStatement order=c.prepareStatement(
+                            "SELECT COALESCE(MAX(sequence_no),0) FROM w3415_gl_events"
+                            +" WHERE event_id<>?")) {
+                        order.setString(1,e.id);
+                        try(ResultSet sequence=order.executeQuery()) {
+                            assertTrue(sequence.next());
+                            previous=sequence.getLong(1);
+                        }
+                    }
                     if(e.sequence!=previous+1)
                         throw new SecurityException("W3415 out-of-order event HOLD");
                     if("CAPTURED".equals(e.kind)) {
