@@ -49,9 +49,9 @@ BEGIN
            COALESCE(SUM(CASE WHEN side='C' THEN amount_minor ELSE 0 END),0),
            COUNT(*) FILTER (WHERE l.currency <> e.currency OR a.currency <> e.currency)
     INTO n,debits,credits,mismatches
-    FROM w3415_gl_lines l
-    JOIN w3415_gl_events e ON e.event_id=l.event_id
-    JOIN w3415_gl_accounts a ON a.account_code=l.account_code
+    FROM __SCHEMA__.w3415_gl_lines l
+    JOIN __SCHEMA__.w3415_gl_events e ON e.event_id=l.event_id
+    JOIN __SCHEMA__.w3415_gl_accounts a ON a.account_code=l.account_code
     WHERE l.event_id=NEW.event_id;
     IF n <> 2 OR debits <> credits OR debits <> NEW.amount_minor
        OR mismatches <> 0 THEN
