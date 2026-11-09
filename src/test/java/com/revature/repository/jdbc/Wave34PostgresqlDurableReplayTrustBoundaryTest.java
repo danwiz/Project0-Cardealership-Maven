@@ -76,6 +76,12 @@ class Wave34PostgresqlDurableReplayTrustBoundaryTest {
                     "second SQL connection must reject the same signed request");
             assertEquals(1, f.claims());
             assertEquals(1, f.postings());
+            // Even a new cryptographic nonce cannot re-open an existing
+            // tenant/request identity with a different purported payment.
+            AuthorizedRequest duplicateId = lease.request(
+                    f.ownership, "PAY-000099", "REQ-001");
+            assertSqlState("23505", () -> f.post(duplicateId, false),
+                    "new nonce cannot bypass tenant/request uniqueness");
 
             // A separate legitimate payment of the SAME amount is not deduped.
             AuthorizedRequest second = lease.request(f.ownership, "PAY-000002", "REQ-002");
@@ -483,8 +489,20 @@ class Wave34PostgresqlDurableReplayTrustBoundaryTest {
             }
         }
         String digest() throws GeneralSecurityException,SQLException {
-            String raw=claims()+":"+postings()+":"+paid()+":"+balance();
-            return sha(raw.getBytes(StandardCharsets.UTF_8));
+            StringBuilder source = new StringBuilder();
+            try (Connection c=scoped.openConnection();Statement stmt=c.createStatement();
+                    ResultSet rows=stmt.executeQuery(
+                        "SELECT transaction_id,customer_name,ownership_id,contract_id,"
+                        +"amount,cumulative_paid,resulting_balance,recorded_at"
+                        +" FROM payment_transactions ORDER BY transaction_id")) {
+                while(rows.next()) {
+                    for(int i=1;i<=8;i++)
+                        source.append(rows.getString(i)).append('\u0000');
+                }
+            }
+            source.append("claims=").append(claims()).append(";plan=")
+                    .append(paid()).append(":").append(balance());
+            return sha(source.toString().getBytes(StandardCharsets.UTF_8));
         }
         void evidence(String scenario) throws Exception {
             Path path=Paths.get("target/wave34-11-evidence");
