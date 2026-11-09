@@ -9,6 +9,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -84,6 +86,7 @@ class Wave34SenderConstrainedLeaseContractTest {
                         NOW.plusSeconds(1)));
         assertEquals(1, verifier.accepted.size(),
                 "neither modified claims nor a forged issuer key is accepted");
+        evidence("issuer-signature-and-tamper", verifier.accepted.size());
     }
 
     @Test
@@ -119,6 +122,7 @@ class Wave34SenderConstrainedLeaseContractTest {
                 NOW.plusSeconds(1));
         assertEquals(1, verifier.accepted.size(),
                 "invalid proof and wrong amount/ownership cannot consume the challenge");
+        evidence("sender-proof-request-binding", verifier.accepted.size());
     }
 
     @Test
@@ -178,6 +182,7 @@ class Wave34SenderConstrainedLeaseContractTest {
                 Proof.sign(lease, fresh, newRequest, writer),
                 newRequest, NOW.plusSeconds(1));
         assertEquals(2, verifier.accepted.size());
+        evidence("concurrent-replay-rejection", verifier.accepted.size());
     }
 
     @Test
@@ -229,11 +234,33 @@ class Wave34SenderConstrainedLeaseContractTest {
                 Proof.sign(rotated, newChallenge, newRequest, writer),
                 newRequest, NOW.plusSeconds(1));
         assertEquals(1, v.accepted.size());
+        evidence("expiry-revocation-rotation", v.accepted.size());
     }
 
     private static Request request(String requestId) {
         return new Request(SUBJECT, requestId, "TEST_ONLY_RECONCILE",
                 1042L, 1250L);
+    }
+
+    private static void evidence(String scenario, int accepted) throws IOException {
+        // Artifact deliberately includes no issuer or sender secret material,
+        // no signed token, no authentication nonce and no customer/merchant data.
+        java.nio.file.Path out = Paths.get("target/wave34-10-evidence");
+        Files.createDirectories(out);
+        String json = "{\n"
+                + "  \"scenario\":\"" + scenario + "\",\n"
+                + "  \"source_head\":\"" + System.getenv("EXPECTED_HEAD") + "\",\n"
+                + "  \"fixture\":\"IN_PROCESS_JCA_P256_ONLY\",\n"
+                + "  \"signature_algorithm\":\"SHA256withECDSA\",\n"
+                + "  \"synthetic_accepted_requests\":" + accepted + ",\n"
+                + "  \"external_issuer_operated\":false,\n"
+                + "  \"durable_replay_store\":false,\n"
+                + "  \"real_payment_processed\":false,\n"
+                + "  \"production_authorized\":false,\n"
+                + "  \"release_disposition\":\"NO-GO\"\n"
+                + "}\n";
+        Files.write(out.resolve(scenario + ".json"),
+                json.getBytes(StandardCharsets.UTF_8));
     }
 
     private static KeyPair keyPair() throws GeneralSecurityException {
