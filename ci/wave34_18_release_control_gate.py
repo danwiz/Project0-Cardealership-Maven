@@ -17,6 +17,7 @@ BASE = "ab834bf4c4eac651450df3306a8b09bba30fc5bb"
 REQUIRED = {
     "docs/audit/wave34/wave34_18_DISPOSABLE_evidence_revocation_post_close.sql",
     "src/test/java/com/revature/repository/jdbc/Wave34PostgresqlEvidenceRevocationAdjustmentTest.java",
+    "src/test/java/com/revature/repository/jdbc/Wave34PostgresqlBalancedGlReconciliationTest.java",
     "docs/audit/wave34/ADR-W34-020-Evidence-Chain-Revocation-Post-Close-Adjustment.md",
     "docs/audit/wave34/Wave34_18_Evidence_Revocation_Post_Close_Runbook.md",
     "docs/audit/wave34/Wave34_18_Evidence_Revocation_Release_Gate_Register.json",
@@ -110,6 +111,12 @@ def static():
             contents = file.read_text(encoding="utf-8")
             if "PROPOSED" not in contents or "NO-GO" not in contents:
                 raise RuntimeError("documentation lacks source/release limitations: " + path)
+    inherited_gl = Path("src/test/java/com/revature/repository/jdbc/Wave34PostgresqlBalancedGlReconciliationTest.java").read_text()
+    if ('+" ON CONFLICT DO NOTHING"' not in inherited_gl
+            or '+" ON CONFLICT (event_id) DO NOTHING"' in inherited_gl
+            or 'assertThrows(SecurityException.class, () ->' not in inherited_gl
+            or "W3415 duplicate event conflict" not in inherited_gl):
+        raise RuntimeError("inherited W34.15 GL event replay repair absent")
     ddl = Path("docs/audit/wave34/wave34_18_DISPOSABLE_evidence_revocation_post_close.sql").read_text()
     if ("DISPOSABLE" not in ddl or "NOT an approved production migration" not in ddl
             or "CREATE TABLE w3418_periods" not in ddl
