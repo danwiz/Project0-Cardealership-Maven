@@ -17,6 +17,7 @@ BASE = "5107c7fdd1e3528a969498c7bf47574190ef3195"
 REQUIRED = {
     "docs/audit/wave34/wave34_17_DISPOSABLE_exception_suspense_period_close.sql",
     "src/test/java/com/revature/repository/jdbc/Wave34PostgresqlExceptionSuspenseCloseTest.java",
+    "src/test/java/com/revature/repository/jdbc/Wave34PostgresqlSettlementBatchApprovalTest.java",
     "docs/audit/wave34/ADR-W34-019-Exception-Suspense-Financial-Period-Close.md",
     "docs/audit/wave34/Wave34_17_Exception_Suspense_Close_Operator_Runbook.md",
     "docs/audit/wave34/Wave34_17_Exception_Close_Release_Gate_Register.json",
@@ -107,6 +108,12 @@ def static():
             contents = file.read_text(encoding="utf-8")
             if "PROPOSED" not in contents or "NO-GO" not in contents:
                 raise RuntimeError("documentation lacks source/release limitations: " + path)
+    repaired = Path("src/test/java/com/revature/repository/jdbc/Wave34PostgresqlSettlementBatchApprovalTest.java").read_text()
+    if ('+" ON CONFLICT DO NOTHING"' not in repaired
+            or '+" ON CONFLICT (batch_id) DO NOTHING"' in repaired
+            or "Batch foreignApproval=new Batch" not in repaired
+            or "assertThrows(SecurityException.class,()->" not in repaired):
+        raise RuntimeError("inherited W34.16 concurrency regression repair missing")
     ddl = Path("docs/audit/wave34/wave34_17_DISPOSABLE_exception_suspense_period_close.sql").read_text()
     if ("DISPOSABLE" not in ddl or "NOT an approved production migration" not in ddl
             or "CREATE TABLE w3417_periods" not in ddl
