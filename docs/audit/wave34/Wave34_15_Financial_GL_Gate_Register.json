@@ -1,0 +1,268 @@
+{
+  "milestone": "WAVE34.15",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "eb4d1de97a940441da1d3b1a0dbb292648c9487a",
+  "release_disposition": "NO-GO",
+  "scope": "DISPOSABLE_POSTGRESQL16_ILLUSTRATIVE_DOUBLE_ENTRY_GL_ONLY",
+  "invariants": {
+    "protected_master_modified": false,
+    "production_payment_code_modified": false,
+    "production_schema_migrated": false,
+    "real_provider_contacted": false,
+    "independent_financial_policy_approved": false,
+    "production_double_entry_verified": false,
+    "real_funds_moved": false,
+    "non_superuser_ledger_custody_verified": false,
+    "app_schema_version": 5
+  },
+  "test_targets": {
+    "full": {
+      "methods": 426,
+      "classes": 121,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W3415-01",
+      "method": "capturedSettledRefundedChargedBackProducesBalancedThreeAccountGL",
+      "scenario": "balanced-capture-settlement-reversals",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3415-02",
+      "method": "deferredBalanceGateRejectsIncompleteUnbalancedAndCurrencyWrongEntries",
+      "scenario": "deferred-balance-and-immutability-denials",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3415-03",
+      "method": "unapprovedOutOfOrderAndReconciliationVarianceRemainOnHold",
+      "scenario": "finance-approval-and-reconciliation-hold",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3415-04",
+      "method": "concurrentReplayCommitsOnlyOneBalancedEventAndApprovalCannotBeReused",
+      "scenario": "concurrent-replay-and-approval-uniqueness",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-15-evidence",
+    "scenarios": [
+      "balanced-capture-settlement-reversals",
+      "deferred-balance-and-immutability-denials",
+      "finance-approval-and-reconciliation-hold",
+      "concurrent-replay-and-approval-uniqueness"
+    ],
+    "signed": false,
+    "independent_timestamp": false,
+    "fields": [
+      "scenario",
+      "source_head",
+      "fixture",
+      "schema_version",
+      "synthetic_gl_events",
+      "synthetic_gl_lines",
+      "synthetic_total_debits_minor",
+      "synthetic_total_credits_minor",
+      "legacy_payment_entries",
+      "ledger_digest_sha256",
+      "real_provider_contacted",
+      "independent_financial_policy_approved",
+      "production_double_entry_verified",
+      "real_funds_moved",
+      "production_authorized",
+      "release_disposition"
+    ]
+  },
+  "gates": [
+    {
+      "id": "GL-01",
+      "title": "Approved legal entity chart of accounts and accounting standards",
+      "status": "NOT_APPROVED",
+      "approved_for_production": false
+    },
+    {
+      "id": "GL-02",
+      "title": "Money currency units and fees ratified by Controller",
+      "status": "NOT_APPROVED",
+      "approved_for_production": false
+    },
+    {
+      "id": "GL-03",
+      "title": "Balanced database commit-time posting gate",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "GL-04",
+      "title": "Authorized capture settlement refund chargeback journal",
+      "status": "SYNTHETIC_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "GL-05",
+      "title": "Independent finance maker-checker signing authority",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "GL-06",
+      "title": "Real bank and merchant settlement reconciliation",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "GL-07",
+      "title": "Durable non-bypassable append-only financial records",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "GL-08",
+      "title": "Production GL/outbox/issuer-to-DB integration",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "GL-09",
+      "title": "Legacy PAY identifier fix and approved versioned migration",
+      "status": "OPEN_DEFECT",
+      "approved_for_production": false
+    },
+    {
+      "id": "GL-10",
+      "title": "Real provider PVA-01..16 and HA/RPO/RTO validation",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "GL-11",
+      "title": "Independent controller/DBA/AppSec/QA/SRE/legal/owner reviews",
+      "status": "PENDING",
+      "approved_for_production": false
+    },
+    {
+      "id": "GL-12",
+      "title": "Historical Stage27 and Phase16 release dispositions",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "external_provider_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Controller/finance",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec/merchant trust",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Payments/treasury",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA/SRE/HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "limitations": "Only three illustrative asset accounts and net-change delta against hypothetical prior AR; test-generated issuer and finance keys; no real merchant/bank accounts, fees, taxes, FX, GAAP approval, non-superuser ledger custody or live postings. Privileged CI owner can bypass test-only triggers."
+}
