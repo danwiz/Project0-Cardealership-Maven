@@ -45,8 +45,8 @@ DECLARE
     n INTEGER; debits BIGINT; credits BIGINT; mismatches INTEGER;
 BEGIN
     SELECT COUNT(*),
-           COALESCE(SUM(CASE WHEN side='D' THEN amount_minor ELSE 0 END),0),
-           COALESCE(SUM(CASE WHEN side='C' THEN amount_minor ELSE 0 END),0),
+           COALESCE(SUM(CASE WHEN l.side='D' THEN l.amount_minor ELSE 0 END),0),
+           COALESCE(SUM(CASE WHEN l.side='C' THEN l.amount_minor ELSE 0 END),0),
            COUNT(*) FILTER (WHERE l.currency <> e.currency OR a.currency <> e.currency)
     INTO n,debits,credits,mismatches
     FROM __SCHEMA__.w3415_gl_lines l
