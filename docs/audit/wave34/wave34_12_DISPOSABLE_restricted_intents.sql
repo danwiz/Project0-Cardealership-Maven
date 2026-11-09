@@ -14,8 +14,7 @@ CREATE TABLE __SCHEMA__.w3412_authorized_intents (
   expires_at TIMESTAMPTZ NOT NULL,
   revoked_at TIMESTAMPTZ,
   consumed_at TIMESTAMPTZ,
-  UNIQUE (tenant, request_id),
-  UNIQUE (transaction_id)
+  UNIQUE (tenant, request_id)
 );
 -- W3412_STATEMENT_BREAK
 CREATE FUNCTION __SCHEMA__.w3412_apply_intent(p_auth UUID)
