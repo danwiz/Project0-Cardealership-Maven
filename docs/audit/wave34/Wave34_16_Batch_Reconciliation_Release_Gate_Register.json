@@ -1,0 +1,273 @@
+{
+  "milestone": "WAVE34.16",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "f99a59c5787fb0229199d9cfa50111bf93b5dcda",
+  "release_disposition": "NO-GO",
+  "scope": "DISPOSABLE_PG16_IN_PROCESS_THREE_SOURCE_SETTLEMENT_ONLY",
+  "invariants": {
+    "protected_master_modified": false,
+    "production_payment_code_modified": false,
+    "production_schema_migrated": false,
+    "real_provider_verified": false,
+    "real_bank_verified": false,
+    "independent_gl_verified": false,
+    "independent_maker_checker_verified": false,
+    "production_reconciliation_deployed": false,
+    "real_funds_moved": false,
+    "app_schema_version": 5
+  },
+  "test_targets": {
+    "full": {
+      "methods": 430,
+      "classes": 122,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W3416-01",
+      "method": "independentlySignedSyntheticSourcesMustMatchBeforeMakerCheckerApproval",
+      "scenario": "three-source-match-and-maker-checker",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3416-02",
+      "method": "bankGlVarianceForgedSourceAndMissingSeparationOfDutiesMustHold",
+      "scenario": "variance-and-separation-of-duties-hold",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3416-03",
+      "method": "concurrentReplayIsIdempotentAndBankReferenceCannotBeReused",
+      "scenario": "concurrent-replay-and-bank-reference",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3416-04",
+      "method": "deferredReconciliationAndAuditFkFailuresRollbackEntireBatch",
+      "scenario": "atomic-audit-rollback-and-deferred-gate",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-16-evidence",
+    "scenarios": [
+      "three-source-match-and-maker-checker",
+      "variance-and-separation-of-duties-hold",
+      "concurrent-replay-and-bank-reference",
+      "atomic-audit-rollback-and-deferred-gate"
+    ],
+    "signed": false,
+    "independent_timestamp": false,
+    "fields": [
+      "scenario",
+      "source_head",
+      "fixture",
+      "schema_version",
+      "synthetic_batches",
+      "synthetic_source_rows",
+      "synthetic_audit_rows",
+      "synthetic_net_minor",
+      "legacy_payment_entries",
+      "reconciliation_digest_sha256",
+      "real_provider_verified",
+      "real_bank_verified",
+      "independent_gl_verified",
+      "independent_maker_checker_verified",
+      "production_authorized",
+      "release_disposition"
+    ]
+  },
+  "gates": [
+    {
+      "id": "BATCH-01",
+      "title": "Authenticated merchant provider settlement",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "BATCH-02",
+      "title": "Booked independently verified bank deposits",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "BATCH-03",
+      "title": "Approved independently sourced general ledger",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "BATCH-04",
+      "title": "Currency fees adjustments timing FX and suspense policy",
+      "status": "NOT_APPROVED",
+      "approved_for_production": false
+    },
+    {
+      "id": "BATCH-05",
+      "title": "Verified separate real maker checker identity and authority",
+      "status": "SYNTHETIC_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "BATCH-06",
+      "title": "Atomic settlement uniqueness audit and 3-source balance",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "BATCH-07",
+      "title": "Production immutable audit custody and restricted ledger writes",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "BATCH-08",
+      "title": "Real cross-system settlement close and exception resolution",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "BATCH-09",
+      "title": "Legacy PAY ID allocator and public payment API",
+      "status": "OPEN_DEFECT",
+      "approved_for_production": false
+    },
+    {
+      "id": "BATCH-10",
+      "title": "Real provider PVA-01..16 and HA recovery",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "BATCH-11",
+      "title": "Independent Controller treasury DBA AppSec QA SRE legal review",
+      "status": "PENDING",
+      "approved_for_production": false
+    },
+    {
+      "id": "BATCH-12",
+      "title": "Historical Stage27/Phase16 release decisions",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "external_provider_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Controller/finance",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Treasury/bank owner",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Merchant/payments owner",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA/SRE/HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "limitations": "Provider, bank, GL, maker and checker keys/claims generated by one JUnit JVM. None of the three feeds is independent real data, maker/checker are not enrolled humans and the PG16 CI superuser can bypass triggers. Only illustrative 100 gross-3 fees=97 net synthetic currency with no approved accounting tolerances or adjustments."
+}
