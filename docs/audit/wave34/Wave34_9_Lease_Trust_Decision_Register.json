@@ -1,0 +1,261 @@
+{
+  "milestone": "WAVE34.9",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "source_parent_sha": "68957fce394b170a820358fa2e50c98b28333b3d",
+  "release_disposition": "NO-GO",
+  "scope": "DISPOSABLE_PG16_BEARER_LEASE_LIFECYCLE",
+  "invariants": {
+    "protected_master_modified": false,
+    "app_runtime_modified": false,
+    "schema_version": 5,
+    "production_role_provisioning": false,
+    "production_schema_migration": false,
+    "real_issuer_verified": false,
+    "stolen_bearer_replay_prevented": false,
+    "production_fencing_verified": false,
+    "real_provider_authenticated": false,
+    "real_funds_processed": false
+  },
+  "qa_targets": {
+    "full": {
+      "methods": 402,
+      "classes": 115,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "tests": [
+    {
+      "id": "W349-01",
+      "method": "issuerCanGrantAndRevokeLeaseButWriterCannotReuseRevokedToken",
+      "status": "PENDING_EXACT_SHA_CI",
+      "evidence": "TEST_ONLY"
+    },
+    {
+      "id": "W349-02",
+      "method": "expiredOrOtherPrincipalLeaseFailsAndRestrictedRolesCannotEscalate",
+      "status": "PENDING_EXACT_SHA_CI",
+      "evidence": "TEST_ONLY"
+    },
+    {
+      "id": "W349-03",
+      "method": "freezeDrainsInFlightLeaseAndRequiresNewEpochTokenAfterReopen",
+      "status": "PENDING_EXACT_SHA_CI",
+      "evidence": "TEST_ONLY"
+    }
+  ],
+  "manifests": {
+    "directory": "target/wave34-9-evidence",
+    "scenarios": [
+      "lease-issuance-revocation",
+      "expiry-and-role-denials",
+      "epoch-cutover-stale-token"
+    ],
+    "signed": false,
+    "independent_timestamp": false,
+    "fields": [
+      "scenario",
+      "head_sha",
+      "fixture",
+      "authorization_basis",
+      "release",
+      "epoch",
+      "mode",
+      "schema_version",
+      "synthetic_postings",
+      "synthetic_balance",
+      "ledger_sha256",
+      "real_external_issuer_verified",
+      "stolen_bearer_replay_prevented",
+      "production_fencing_verified",
+      "production_authorized"
+    ]
+  },
+  "gates": [
+    {
+      "id": "LEASE-01",
+      "title": "Real independent issuer with managed key custody",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "LEASE-02",
+      "title": "Sender-constrained non-replayable writer proof",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "LEASE-03",
+      "title": "Lease issue, expiry and revocation",
+      "status": "SYNTHETIC_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "LEASE-04",
+      "title": "Lease bound to authenticated DB principal and epoch",
+      "status": "SYNTHETIC_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "LEASE-05",
+      "title": "Non-superuser production DDL/function owner",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "LEASE-06",
+      "title": "Multi-node quorum and previous primary fencing",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "LEASE-07",
+      "title": "Writer drain and true fenced snapshot",
+      "status": "SYNTHETIC_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "LEASE-08",
+      "title": "Operator restore/rollback and RPO/RTO",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "LEASE-09",
+      "title": "Real external provider PVA-01..16",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "LEASE-10",
+      "title": "Financial units, refunds, accounting and outbox",
+      "status": "BLOCKED_OWNER",
+      "approved_for_production": false
+    },
+    {
+      "id": "LEASE-11",
+      "title": "Ledger allocator fix and versioned migration",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "LEASE-12",
+      "title": "Independent reviews/source rights/release GO",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "provider_acceptance": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "owner_reviews": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec/identity issuer",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Payments/finance",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "SRE/quorum HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "limitations": "Tests use DB-local test role to mint a client-held UUID; not independent issuer. The privileged test DB owner can bypass controls. A stolen bearer remains replayable by same principal until revoked or expired."
+}
