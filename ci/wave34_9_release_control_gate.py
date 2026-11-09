@@ -104,7 +104,7 @@ def static():
             or any(v is not False for k,v in invariants.items()
                    if k != "app_schema_version")):
         raise RuntimeError("unapproved production actions claimed")
-    targets = record.get("qa_targets", {})
+    targets = record.get("test_targets", {})
     if (targets.get("full", {}).get("methods"), targets.get("full", {}).get("classes"),
             targets.get("security", {}).get("methods"),
             targets.get("security", {}).get("classes")) != (402,115,151,64):
