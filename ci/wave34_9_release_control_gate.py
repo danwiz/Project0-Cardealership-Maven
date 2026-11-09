@@ -11,7 +11,7 @@ from xml.etree import ElementTree as ET
 
 BASE = "68957fce394b170a820358fa2e50c98b28333b3d"
 CHANGED = {
-    "docs/audit/wave34/wave34_9_DISPOSABLE_authenticated_principal_fence.sql",
+    "docs/audit/wave34/wave34_9_DISPOSABLE_lease_fence.sql",
     "src/test/java/com/revature/repository/jdbc/Wave34PostgresqlLeaseLifecycleTest.java",
     "docs/audit/wave34/ADR-W34-011-Short-Lived-Lease-Issuance-and-Revocation.md",
     "docs/audit/wave34/Wave34_9_Lease_Revocation_Review_Runbook.md",
@@ -89,7 +89,7 @@ def static():
             content = file.read_text(encoding="utf-8")
             if "PROPOSED" not in content or "NO-GO" not in content:
                 raise RuntimeError("unapproved proposal labeled GO: "+name)
-    sql = Path("docs/audit/wave34/wave34_9_DISPOSABLE_authenticated_principal_fence.sql").read_text()
+    sql = Path("docs/audit/wave34/wave34_9_DISPOSABLE_lease_fence.sql").read_text()
     if (sql.count("-- W349_STATEMENT_BREAK") != 6
             or "__SCHEMA__" not in sql
             or "NOT A PRODUCTION MIGRATION" not in sql
