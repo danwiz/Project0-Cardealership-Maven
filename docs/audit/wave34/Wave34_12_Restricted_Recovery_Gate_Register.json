@@ -1,0 +1,266 @@
+{
+  "milestone": "WAVE34.12",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "3c77a609f3907d6ff153cea875abd76eaf4755aa",
+  "release_disposition": "NO-GO",
+  "scope": "DISPOSABLE_POSTGRESQL16_RESTRICTED_SQL_LOCAL_ACK_ONLY",
+  "invariants": {
+    "protected_master_modified": false,
+    "payment_runtime_modified": false,
+    "production_schema_migrated": false,
+    "independent_issuer_verified": false,
+    "non_superuser_function_owner_verified": false,
+    "real_provider_ack_recovered": false,
+    "production_replay_store_deployed": false,
+    "real_funds_processed": false,
+    "app_schema_version": 5
+  },
+  "test_targets": {
+    "full": {
+      "methods": 414,
+      "classes": 118,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W3412-01",
+      "method": "executorCanOnlyUseControlledFunctionAndIssuerCannotPostDirectly",
+      "scenario": "privilege-and-function-gate",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3412-02",
+      "method": "lostLocalAcknowledgementRetryReturnsSameResultWithoutDuplicatePosting",
+      "scenario": "lost-local-ack-idempotent",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3412-03",
+      "method": "simultaneousRetryOfSameIntentIsSerializedAndOnlyPostedOnce",
+      "scenario": "concurrent-ack-replay",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3412-04",
+      "method": "duplicateLedgerIdRollsBackPlanAndIntentAndRevokedExpiredRequestsFail",
+      "scenario": "failed-post-and-expiry",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-12-evidence",
+    "scenarios": [
+      "privilege-and-function-gate",
+      "lost-local-ack-idempotent",
+      "concurrent-ack-replay",
+      "failed-post-and-expiry"
+    ],
+    "signed": false,
+    "independent_timestamp": false,
+    "fields": [
+      "scenario",
+      "source_head",
+      "fixture",
+      "schema_version",
+      "synthetic_intents",
+      "synthetic_consumed",
+      "synthetic_postings",
+      "synthetic_balance",
+      "source_digest_sha256",
+      "independent_issuer_verified",
+      "non_superuser_function_owner_verified",
+      "real_provider_ack_recovered",
+      "production_authorized",
+      "release_disposition"
+    ]
+  },
+  "gates": [
+    {
+      "id": "DB-01",
+      "title": "Independent verifier and merchant authority",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "DB-02",
+      "title": "Production non-superuser function owner",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "DB-03",
+      "title": "Restricted SQL principals and DML ACL denial",
+      "status": "SYNTHETIC_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "DB-04",
+      "title": "Idempotent local unknown-ACK recovery",
+      "status": "SYNTHETIC_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "DB-05",
+      "title": "External merchant lost ACK reconciliation",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "DB-06",
+      "title": "PVA-01..16 real provider tests",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "DB-07",
+      "title": "Authenticated signed intent and tenant ownership",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "DB-08",
+      "title": "Cross-node and stale-primary recovery",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "DB-09",
+      "title": "PAY identifier defect and versioned migration",
+      "status": "OPEN_DEFECT",
+      "approved_for_production": false
+    },
+    {
+      "id": "DB-10",
+      "title": "Money, refunds and ledger/outbox accounting",
+      "status": "BLOCKED_OWNER",
+      "approved_for_production": false
+    },
+    {
+      "id": "DB-11",
+      "title": "Independent DBA/QA/AppSec/SRE/payments/legal reviews",
+      "status": "PENDING",
+      "approved_for_production": false
+    },
+    {
+      "id": "DB-12",
+      "title": "Stage27/Phase16 original release signoff",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "external_provider_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec/independent verifier",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Payments/finance",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "SRE/HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "limitations": "The issuer is a disposable DB role and can mint arbitrary test intents; SECURITY DEFINER is superuser-owned in CI. Recovery tests deliberately lose only LOCAL SQL acknowledgement and do not contact any real payment provider."
+}
