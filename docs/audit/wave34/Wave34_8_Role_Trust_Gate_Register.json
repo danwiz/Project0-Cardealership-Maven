@@ -1,0 +1,256 @@
+{
+  "milestone": "WAVE34.8",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "588dfb0661f38dc561316d5cc1358ca60e18091b",
+  "release_disposition": "NO-GO",
+  "scope": "DISPOSABLE_PG16_ROLE_AUTHENTICATION_AND_ACL_ONLY",
+  "invariants": {
+    "protected_master_modified": false,
+    "runtime_source_changed": false,
+    "production_schema_migrated": false,
+    "production_role_provisioning": false,
+    "external_epoch_issuer_verified": false,
+    "production_fencing_verified": false,
+    "real_provider_authenticated": false,
+    "real_funds_processed": false,
+    "app_schema_version": 5
+  },
+  "qa_targets": {
+    "full": {
+      "methods": 399,
+      "classes": 114,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W348-01",
+      "method": "databaseAuthenticatedPrincipalNotCallerEpochControlsWrites",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W348-02",
+      "method": "restrictedWriterCannotChangeEpochRegistryDisableTriggerOrImpersonateOperator",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W348-03",
+      "method": "independentOperatorFreezeWaitsForAuthenticatedWriterTransaction",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-8-evidence",
+    "scenarios": [
+      "authenticated-epoch-transition",
+      "restricted-privilege-denials",
+      "independent-operator-drain"
+    ],
+    "signed": false,
+    "third_party_timestamp": false,
+    "fields": [
+      "scenario",
+      "head_sha",
+      "fixture",
+      "authorization_basis",
+      "release",
+      "epoch",
+      "mode",
+      "schema_version",
+      "synthetic_postings",
+      "synthetic_balance",
+      "ledger_sha256",
+      "external_epoch_issuer_verified",
+      "production_fencing_verified",
+      "production_authorized"
+    ]
+  },
+  "gates": [
+    {
+      "id": "ROLE-01",
+      "name": "Independent authority, anti-spoofable issuer and lease",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "ROLE-02",
+      "name": "Restricted database login identity and per-epoch registry",
+      "status": "SYNTHETIC_ROLE_TEST",
+      "approved_for_production": false
+    },
+    {
+      "id": "ROLE-03",
+      "name": "Writer cannot edit fence/registry or disable triggers",
+      "status": "SYNTHETIC_ACL_TEST",
+      "approved_for_production": false
+    },
+    {
+      "id": "ROLE-04",
+      "name": "Operator cannot post finance transactions",
+      "status": "SYNTHETIC_ACL_TEST",
+      "approved_for_production": false
+    },
+    {
+      "id": "ROLE-05",
+      "name": "Operator freeze serialized with active writer transaction",
+      "status": "SYNTHETIC_PG16_TEST",
+      "approved_for_production": false
+    },
+    {
+      "id": "ROLE-06",
+      "name": "Non-superuser production SECURITY DEFINER owner",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "ROLE-07",
+      "name": "Quorum old-primary isolation and client routing",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "ROLE-08",
+      "name": "Signed source snapshot, LSN, external custody",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "ROLE-09",
+      "name": "Full financial units, refund/outbox/accounting",
+      "status": "BLOCKED_OWNER",
+      "approved_for_production": false
+    },
+    {
+      "id": "ROLE-10",
+      "name": "Real merchant verification PVA-01 to 16",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "ROLE-11",
+      "name": "Production migration, recovery, RPO/RTO and review",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "ROLE-12",
+      "name": "Original Stage27 and Phase16 release disposition",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "external_provider_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec/issuer",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Payments/finance",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "SRE/HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "caveat": "A PostgreSQL role is authenticated by this one CI database but no independent provider or quorum-backed epoch issuer exists. Test DBA is privileged and can bypass the trigger."
+}
