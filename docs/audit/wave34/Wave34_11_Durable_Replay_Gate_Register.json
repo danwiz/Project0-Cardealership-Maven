@@ -1,0 +1,266 @@
+{
+  "milestone": "WAVE34.11",
+  "repository": "danwiz/Project0-Cardealership-Maven",
+  "parent_head_sha": "003b4589020a1b5c762036cbca06d08ad7528959",
+  "release_disposition": "NO-GO",
+  "scope": "DISPOSABLE_POSTGRESQL16_SIGNED_REQUEST_REPLAY_REHEARSAL",
+  "invariants": {
+    "master_modified": false,
+    "payment_runtime_modified": false,
+    "production_schema_migrated": false,
+    "production_issuer_verified": false,
+    "production_sender_key_attested": false,
+    "app_replay_path_integrated": false,
+    "real_provider_authenticated": false,
+    "production_replay_store_deployed": false,
+    "real_funds_processed": false,
+    "app_schema_version": 5
+  },
+  "test_targets": {
+    "full": {
+      "methods": 410,
+      "classes": 117,
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    "security": {
+      "methods": 151,
+      "classes": 64,
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  },
+  "cases": [
+    {
+      "id": "W3411-01",
+      "method": "reconnectCannotReconsumeCommittedSignedRequestButDistinctPaymentIsAllowed",
+      "scenario": "reconnect-and-distinct-payment",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3411-02",
+      "method": "concurrentSameSignedRequestHasExactlyOneAtomicLedgerCommit",
+      "scenario": "concurrent-transactional-claim",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3411-03",
+      "method": "failedLedgerInsertRollsBackClaimAndPlanAndAllowsControlledRetry",
+      "scenario": "rollback-and-retry",
+      "status": "PENDING_EXACT_SHA_CI"
+    },
+    {
+      "id": "W3411-04",
+      "method": "invalidIssuerSenderAndRequestClaimsCannotReachSqlReservation",
+      "scenario": "trust-fail-closed",
+      "status": "PENDING_EXACT_SHA_CI"
+    }
+  ],
+  "manifest_contract": {
+    "directory": "target/wave34-11-evidence",
+    "scenarios": [
+      "reconnect-and-distinct-payment",
+      "concurrent-transactional-claim",
+      "rollback-and-retry",
+      "trust-fail-closed"
+    ],
+    "signed": false,
+    "independent_timestamp": false,
+    "fields": [
+      "scenario",
+      "source_head",
+      "fixture",
+      "schema_version",
+      "synthetic_claims",
+      "synthetic_postings",
+      "synthetic_balance",
+      "source_digest_sha256",
+      "independent_issuer_verified",
+      "production_trusted_sql_principal",
+      "real_provider_verified",
+      "production_authorized",
+      "release_disposition"
+    ]
+  },
+  "gates": [
+    {
+      "id": "REPLAY-01",
+      "title": "Independent managed cryptographic issuer",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "REPLAY-02",
+      "title": "Sender-attested key and channel",
+      "status": "SYNTHETIC_JCA_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "REPLAY-03",
+      "title": "One-DB durable claim uniqueness",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "REPLAY-04",
+      "title": "Cryptographic exact request validation",
+      "status": "SYNTHETIC_JCA_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "REPLAY-05",
+      "title": "Atomic synthetic replay+plan+ledger commit",
+      "status": "SYNTHETIC_PG16_ONLY",
+      "approved_for_production": false
+    },
+    {
+      "id": "REPLAY-06",
+      "title": "Non-bypassable verifier-to-DB principal boundary",
+      "status": "NOT_IMPLEMENTED",
+      "approved_for_production": false
+    },
+    {
+      "id": "REPLAY-07",
+      "title": "Real provider-charge idempotency and status",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "REPLAY-08",
+      "title": "Old-primary HA and RPO/RTO",
+      "status": "NOT_RUN",
+      "approved_for_production": false
+    },
+    {
+      "id": "REPLAY-09",
+      "title": "Currency, refunds and accounting",
+      "status": "BLOCKED_OWNER",
+      "approved_for_production": false
+    },
+    {
+      "id": "REPLAY-10",
+      "title": "PAY-ID allocator fix and production migration",
+      "status": "OPEN_DEFECT",
+      "approved_for_production": false
+    },
+    {
+      "id": "REPLAY-11",
+      "title": "Independent ownership and security reviews",
+      "status": "PENDING",
+      "approved_for_production": false
+    },
+    {
+      "id": "REPLAY-12",
+      "title": "Original Stage27/Phase16 release gates",
+      "status": "NO-GO",
+      "approved_for_production": false
+    }
+  ],
+  "external_provider_cases": [
+    {
+      "id": "PVA-01",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-02",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-03",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-04",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-05",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-06",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-07",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-08",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-09",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-10",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-11",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-12",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-13",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-14",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-15",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    },
+    {
+      "id": "PVA-16",
+      "status": "NOT_RUN_REAL_PROVIDER"
+    }
+  ],
+  "approvals": [
+    {
+      "owner": "Owner/release",
+      "status": "PENDING"
+    },
+    {
+      "owner": "DBA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "AppSec/independent issuer",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Payments/finance",
+      "status": "PENDING"
+    },
+    {
+      "owner": "QA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "SRE/HA",
+      "status": "PENDING"
+    },
+    {
+      "owner": "Legal/source rights",
+      "status": "PENDING"
+    }
+  ],
+  "historical_registers": {
+    "stage27": {
+      "reported_total": 14,
+      "verified_closed": 0,
+      "status": "UNRECONCILED_HISTORICAL"
+    },
+    "phase16": {
+      "reported_total": 17,
+      "reported_blocking": 12,
+      "status": "UNRECONCILED_HISTORICAL"
+    }
+  },
+  "limitations": "One test JVM generates both issuer and sender private keys and uses an elevated PostgreSQL CI connection. Unique SQL claims survive a new client connection but do not prove independent authority, production non-bypassability, cross-region consensus, real merchant trust, or money correctness."
+}
