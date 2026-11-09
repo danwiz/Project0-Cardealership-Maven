@@ -162,16 +162,16 @@ class Wave34PostgresqlRestrictedRecoveryTest {
         try (Fixture f = new Fixture()) {
             UUID first = f.issue("REQ-A", "PAY-000001", 1, 60);
             f.apply(first);
-            String before = f.digest();
             UUID colliding = f.issue("REQ-B", "PAY-000001", 1, 60);
+            String beforeFailedApply = f.digest();
             assertSqlState("23505", () -> f.apply(colliding));
             assertEquals(1, f.postings());
             assertEquals(1, f.consumed(),
                     "failed insert must not mark new request consumed");
             assertEquals(1, f.paid());
             assertEquals(23999, f.balance());
-            assertEquals(before.replace("intent-count:1", "intent-count:2"),
-                    f.digest(), "failure must alter only the new unconsumed intent count");
+            assertEquals(beforeFailedApply, f.digest(),
+                    "failed ledger insert cannot mutate plan, consumption or source ledger");
             f.revoke(colliding);
             assertSqlState("55000", () -> f.apply(colliding));
             UUID expired = f.issue("REQ-EXPIRED", "PAY-000002", 1, -5);
