@@ -50,3 +50,11 @@ HOLD financial close if any unresolved exception, pending bank settlement, unsup
 | CLOSE-12 | Stage27 and Phase16 source release assessment | NO-GO |
 
 **Only the synthetic PG16 fixture may be used. No real accounting period, GL record, bank deposit, provider account, production migration, software merge or payment operation is authorized.**
+
+## Explicit inherited replay-regression remediation checkpoint
+
+[Issue #51](https://github.com/danwiz/Project0-Cardealership-Maven/issues/51) tracks the inherited Wave34.16 synthetic batch replay defect observed in both Java11 attempts of GitHub Actions [#42709465166](https://github.com/danwiz/Project0-Cardealership-Maven/actions/runs/42709465166): the four-way same-batch test sometimes receives SQLSTATE 23505 for the maker approval unique index rather than an idempotent replay result.
+
+The Wave34.17 PR intentionally includes one additional **test-only** file, \`Wave34PostgresqlSettlementBatchApprovalTest.java\`, as its eighth allowed change. The insert now ignores conflicts on any unique index but only returns success if an *exact matching batch ID, digest, original maker/checker approvals and financial totals* is read back. A new negative case reuses an approval ID on a **different** batch and must fail closed without writing new source/audit rows. The prior W34.16 PR and its accepted SHA remain unmodified. Full Java11/17/PG16 acceptance and independent SECURITY regression must be rerun on the amended Wave34.17 exact head.
+
+Do not interpret this test reliability repair as resolving real provider idempotency, financial maker-checker authorization, ledger ID collision or an approved release gate.
