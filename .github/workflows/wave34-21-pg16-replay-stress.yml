@@ -1,0 +1,176 @@
+name: W34.21-B Review-only PG16 Replay Stress (NO-GO)
+
+on:
+  pull_request:
+    branches:
+      - audit/wave34-19-witness-revocation-outbox-20261109
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: w3421-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: true
+
+jobs:
+  architecture-custody:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Checkout immutable PR source and ancestry
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Enforce frozen baseline and review-only changes
+        run: |
+          set -euo pipefail
+          python3 ci/wave34_21_pg16_stress_gate.py static
+      - name: Preserve source-custody report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3421-source-custody-${{ github.event.pull_request.head.sha }}
+          path: docs/audit/wave34/Wave34_21_B_Review_Only_Stress_Runbook.md
+          retention-days: 14
+
+  baseline:
+    needs: architecture-custody
+    name: Baseline Java ${{ matrix.java }} PG16 full + SECURITY
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['11', '17']
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dealership_ci_owner
+          POSTGRES_PASSWORD: ci-only-postgres-fixture
+          POSTGRES_DB: dealership_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dealership_ci_owner -d dealership_ci"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+    env:
+      CI: 'true'
+      W34_DISPOSABLE_ONLY: 'true'
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      DEALERSHIP_PG_TEST_URL: jdbc:postgresql://localhost:5432/dealership_ci
+      DEALERSHIP_PG_TEST_USER: dealership_ci_owner
+      DEALERSHIP_PG_TEST_PASSWORD: ci-only-postgres-fixture
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Preserve inherited logical WAL fixture configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          pg_container='${{ job.services.postgres.id }}'
+          docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -v ON_ERROR_STOP=1 -c "ALTER SYSTEM SET wal_level = 'logical'"
+          docker restart "$pg_container"
+          for attempt in {1..30}; do
+            docker exec "$pg_container" pg_isready -U dealership_ci_owner -d dealership_ci >/dev/null 2>&1 && break
+            sleep 1
+          done
+          test "$(docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -At -c 'SHOW wal_level')" = logical
+      - name: Complete inherited PG16 full JUnit suite
+        run: |
+          set -euo pipefail
+          mvn --batch-mode --no-transfer-progress clean verify
+          python3 ci/stage28_check_surefire.py full 442 125 target/surefire-reports wave34-21-full-roster.json
+      - name: Separate SECURITY suite and roster
+        run: |
+          set -euo pipefail
+          rm -rf target/surefire-reports
+          mvn --batch-mode --no-transfer-progress '-Dgroups=SECURITY | security' test
+          python3 ci/stage28_check_surefire.py security 151 64 target/surefire-reports wave34-21-security-roster.json
+      - name: Preserve full and security results (including failures)
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3421-baseline-jdk${{ matrix.java }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            target/surefire-reports/
+            wave34-21-*-roster.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  stress:
+    needs: [architecture-custody, baseline]
+    name: Issue ${{ matrix.issue }} JDK ${{ matrix.java }} shard ${{ matrix.shard }} (250 invocations)
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        issue: [51, 53]
+        java: ['11', '17']
+        shard: [0, 1, 2, 3]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dealership_ci_owner
+          POSTGRES_PASSWORD: ci-only-postgres-fixture
+          POSTGRES_DB: dealership_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dealership_ci_owner -d dealership_ci"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+    env:
+      CI: 'true'
+      W34_DISPOSABLE_ONLY: 'true'
+      W3421_ISSUE: ${{ matrix.issue }}
+      W3421_SHARD: ${{ matrix.shard }}
+      W3421_COUNT: '250'
+      W3421_JDK: ${{ matrix.java }}
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      DEALERSHIP_PG_TEST_URL: jdbc:postgresql://localhost:5432/dealership_ci
+      DEALERSHIP_PG_TEST_USER: dealership_ci_owner
+      DEALERSHIP_PG_TEST_PASSWORD: ci-only-postgres-fixture
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Compute nonoverlapping shard schedule index
+        run: echo "W3421_START=$(( W3421_SHARD * 250 ))" >> "$GITHUB_ENV"
+      - name: Re-execute real four-worker PostgreSQL fixture 250 times
+        shell: bash
+        run: |
+          set -euo pipefail
+          mvn --batch-mode --no-transfer-progress '-Dtest=Wave3421PostgresqlReplayStressHarness' test
+          python3 ci/wave34_21_pg16_stress_gate.py stress
+      - name: Archive every observed schedule and failed run
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3421-issue${{ matrix.issue }}-jdk${{ matrix.java }}-shard${{ matrix.shard }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            wave34-21-evidence/
+            target/surefire-reports/
+          if-no-files-found: warn
+          retention-days: 14
