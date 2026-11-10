@@ -1,0 +1,158 @@
+name: W34.23 Separate-process Witness Receiver (REVIEW ONLY NO-GO)
+
+on:
+  pull_request:
+    branches:
+      - audit/wave34-22-deterministic-pg16-barriers-20261109
+
+permissions:
+  contents: read
+
+concurrency:
+  group: w3423-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: true
+
+jobs:
+  source-custody:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check exact four-file custody and immutable parent
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave34_23_gate.py static
+      - name: Preserve design register
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3423-source-custody-${{ github.event.pull_request.head.sha }}
+          path: docs/audit/wave34/Wave34_23_Process_Boundary_Review.md
+          retention-days: 14
+
+  process-boundary:
+    needs: source-custody
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: 'true'
+      W34_DISPOSABLE_ONLY: 'true'
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Confirm OpenSSL and Python standard-library environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 --version
+          openssl version
+      - name: Run twelve witness and receiver process-boundary scenarios
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave34_23_boundary_lab.py test
+          python3 ci/wave34_23_gate.py evidence
+      - name: Preserve exact-head evidence, including partial failures
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3423-process-boundary-${{ github.event.pull_request.head.sha }}
+          path: wave34-23-evidence/
+          if-no-files-found: warn
+          retention-days: 14
+
+  inherited-regression:
+    needs: source-custody
+    name: Java ${{ matrix.java }} PostgreSQL16 full and SECURITY inheritance
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['11', '17']
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dealership_ci_owner
+          POSTGRES_PASSWORD: ci-only-postgres-fixture
+          POSTGRES_DB: dealership_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dealership_ci_owner -d dealership_ci"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+    env:
+      CI: 'true'
+      W34_DISPOSABLE_ONLY: 'true'
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      DEALERSHIP_PG_TEST_URL: jdbc:postgresql://localhost:5432/dealership_ci
+      DEALERSHIP_PG_TEST_USER: dealership_ci_owner
+      DEALERSHIP_PG_TEST_PASSWORD: ci-only-postgres-fixture
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Preserve inherited logical WAL fixture configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          pg_container='${{ job.services.postgres.id }}'
+          docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -v ON_ERROR_STOP=1 -c "ALTER SYSTEM SET wal_level = 'logical'"
+          docker restart "$pg_container"
+          for attempt in {1..30}; do
+            docker exec "$pg_container" pg_isready -U dealership_ci_owner -d dealership_ci >/dev/null 2>&1 && break
+            sleep 1
+          done
+          test "$(docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -At -c 'SHOW wal_level')" = logical
+      - name: Full inherited JUnit suite, unchanged 450 methods in 126 classes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mvn --batch-mode --no-transfer-progress clean verify
+          python3 ci/stage28_check_surefire.py full 450 126 target/surefire-reports wave34-23-full-roster.json
+      - name: Preserve full suite success and failure
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3423-full-jdk${{ matrix.java }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            target/surefire-reports/
+            target/wave34-22-evidence/
+            wave34-23-full-roster.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Independent SECURITY selection, unchanged 151 methods in 64 classes
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf target/surefire-reports
+          mvn --batch-mode --no-transfer-progress '-Dgroups=SECURITY | security' test
+          python3 ci/stage28_check_surefire.py security 151 64 target/surefire-reports wave34-23-security-roster.json
+      - name: Preserve SECURITY suite success and failure
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3423-security-jdk${{ matrix.java }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            target/surefire-reports/
+            wave34-23-security-roster.json
+          if-no-files-found: warn
+          retention-days: 14
