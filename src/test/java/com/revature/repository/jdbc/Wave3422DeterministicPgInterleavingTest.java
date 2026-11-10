@@ -74,7 +74,7 @@ public class Wave3422DeterministicPgInterleavingTest {
                 f.waitBlocked(pb,pa); // server confirms the unique index conflict wait
                 assertCounts(f,0,0,0,0,0); // no uncommitted primary evidence leaked
                 a.commit();
-                assertEquals(0,pending.get(DEADLINE_SECONDS,TimeUnit.SECONDS));
+                assertEquals(0,pending.get(DEADLINE_SECONDS,TimeUnit.SECONDS).intValue());
                 assertCounts(f,1,3,1,0,0);
                 f.emit("W3422-01","exact_batch_replay",
                         "unique_index_block_observed pidA="+pa+" pidB="+pb);
@@ -158,7 +158,7 @@ public class Wave3422DeterministicPgInterleavingTest {
                 f.waitBlocked(pb,pa);
                 assertCounts(f,0,0,0,0,0);
                 a.commit();
-                assertEquals(0,pending.get(DEADLINE_SECONDS,TimeUnit.SECONDS));
+                assertEquals(0,pending.get(DEADLINE_SECONDS,TimeUnit.SECONDS).intValue());
                 assertCounts(f,0,0,0,1,2);
                 try(Connection c=f.open()) {
                     assertEquals(25L,f.total(c,"D"));
