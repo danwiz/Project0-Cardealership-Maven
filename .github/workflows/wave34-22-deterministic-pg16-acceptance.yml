@@ -1,0 +1,133 @@
+name: W34.22 Controlled PG16 Interleavings (REVIEW ONLY NO-GO)
+
+on:
+  pull_request:
+    branches:
+      - audit/wave34-21-b-pg16-replay-stress-20261109
+
+permissions:
+  contents: read
+
+concurrency:
+  group: w3422-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: true
+
+jobs:
+  source-custody:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Checkout immutable PR head and ancestry
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Confirm five additions and frozen sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          python3 ci/wave34_22_release_control_gate.py static
+      - name: Preserve source custody regardless of result
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3422-source-custody-${{ github.event.pull_request.head.sha }}
+          path: |
+            wave34-22-evidence/
+            docs/audit/wave34/Wave34_22_Deterministic_PG16_Operator_Runbook.md
+          if-no-files-found: warn
+          retention-days: 14
+
+  full-and-security:
+    needs: source-custody
+    name: JDK ${{ matrix.java }} PG16 450-full + 151-SECURITY
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['11', '17']
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dealership_ci_owner
+          POSTGRES_PASSWORD: ci-only-postgres-fixture
+          POSTGRES_DB: dealership_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dealership_ci_owner -d dealership_ci"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+    env:
+      CI: 'true'
+      W34_DISPOSABLE_ONLY: 'true'
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+      DEALERSHIP_PG_TEST_URL: jdbc:postgresql://localhost:5432/dealership_ci
+      DEALERSHIP_PG_TEST_USER: dealership_ci_owner
+      DEALERSHIP_PG_TEST_PASSWORD: ci-only-postgres-fixture
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Prepare inherited test logical WAL configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          pg_container='${{ job.services.postgres.id }}'
+          docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -v ON_ERROR_STOP=1 -c "ALTER SYSTEM SET wal_level = 'logical'"
+          docker restart "$pg_container"
+          for attempt in {1..30}; do
+            docker exec "$pg_container" pg_isready -U dealership_ci_owner -d dealership_ci >/dev/null 2>&1 && break
+            sleep 1
+          done
+          test "$(docker exec "$pg_container" psql -U dealership_ci_owner -d dealership_ci -At -c 'SHOW wal_level')" = logical
+      - name: Run FULL exact-head JUnit PostgreSQL16 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          mvn --batch-mode --no-transfer-progress clean verify
+          python3 ci/stage28_check_surefire.py full 450 126 target/surefire-reports wave34-22-full-roster.json
+          python3 ci/wave34_22_release_control_gate.py full
+      - name: Preserve full JUnit and eight PG16 manifests
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3422-full-jdk${{ matrix.java }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            target/surefire-reports/
+            target/wave34-22-evidence/
+            wave34-22-evidence/
+            wave34-22-full-roster.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Run independent SECURITY selection
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf target/surefire-reports
+          mvn --batch-mode --no-transfer-progress '-Dgroups=SECURITY | security' test
+          python3 ci/stage28_check_surefire.py security 151 64 target/surefire-reports wave34-22-security-roster.json
+          python3 ci/wave34_22_release_control_gate.py security
+      - name: Preserve SECURITY JUnit, success or failure
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3422-security-jdk${{ matrix.java }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            target/surefire-reports/
+            wave34-22-evidence/
+            wave34-22-security-roster.json
+          if-no-files-found: warn
+          retention-days: 14
