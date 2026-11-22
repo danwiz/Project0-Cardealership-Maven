@@ -1,0 +1,75 @@
+name: W34.24 Adversarial Trust Negative Controls (RELEASE NO-GO)
+
+on:
+  pull_request:
+    branches:
+      - audit/wave34-23-witness-receiver-process-boundaries-20261110
+
+permissions:
+  contents: read
+
+concurrency:
+  group: w3424-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: true
+
+jobs:
+  exact-head-custody:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Review-only five-path scope; inherited sources immutable
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave34_24_gate.py static
+      - name: Preserve the unapproved independence register
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3424-custody-${{ github.event.pull_request.head.sha }}
+          path: |
+            docs/audit/wave34/Wave34_24_Independent_Trust_Gate_Register.md
+            docs/audit/wave34/Wave34_24_QA_AppSec_Adjudication_Dossier.md
+          retention-days: 14
+
+  negative-controls-observed-not-cleared:
+    needs: exact-head-custody
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CI: 'true'
+      W34_DISPOSABLE_ONLY: 'true'
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Check Python and OpenSSL prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 --version
+          openssl version
+      - name: Probe eight EXPECTED control failures (not a production PASS)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/wave34_24_adversarial_boundary_probe.py
+          python3 ci/wave34_24_gate.py evidence
+      - name: Preserve exact-SHA evidence including partial failure
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: w3424-negatives-${{ github.event.pull_request.head.sha }}
+          path: wave34-24-evidence/
+          if-no-files-found: warn
+          retention-days: 14
